@@ -10,9 +10,22 @@ config SERVER_HOSTNAME
 config SERVER_PORT
 	int "MainThingy server port number"
 
+
 config USE_ASSISTANCE
 	bool "Use assistance module"
 
+config USE_ASSISTANCE_AGNSS
+	bool "Use agnss assistance"
+	select NRF_CLOUD_AGNSS
+	
+config USE_ASSISTANCE_PGPS
+	bool "Use pgps assistance"
+	select NRF_CLOUD_PGPS
+	select FLASH
+	select FLASH_MAP
+	select STREAM_FLASH
+	select FCB
+	select DATE_TIME
 endmenu
 
 

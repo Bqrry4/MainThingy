@@ -5,20 +5,51 @@
 #include <zephyr/sys/timeutil.h>
 #include <nrf_modem_gnss.h>
 #include <nrf_modem_at.h>
-#include <net/nrf_cloud_agnss.h>
 #include <net/nrf_cloud_coap.h>
+#include <net/nrf_cloud_agnss.h>
+#include <net/nrf_cloud_pgps.h>
 
 #include "assistance.h"
 #include "modem_config.h"
 
+/* This module is using the nRfCloud Coap api assistance */
+
 LOG_MODULE_REGISTER(assistance_module, LOG_LEVEL_INF);
 
+#if defined(CONFIG_USE_ASSISTANCE_AGNSS)
 static uint8_t agnss_buffer[4096];
+#endif /* CONFIG_USE_ASSISTANCE_AGNSS */
 
-/// Using the nRfCloud Coap api assistance
-int assistance_init()
+#if defined(CONFIG_USE_ASSISTANCE_PGPS)
+
+/// @brief Saving the agnss request, to inject it only with data from PGPS when AGNSS request to the cloud will fail
+static struct nrf_modem_gnss_agnss_data_frame agnss_need;
+static struct gps_pgps_request *pgps_request;
+static struct nrf_cloud_pgps_prediction *prediction;
+
+// The function for getting the pgps data
+static void get_pgps_data_work_fn(struct k_work *work);
+static struct k_work get_pgps_data_work;
+
+// The function for injecting a pgps prediction
+static void inject_pgps_data_work_fn(struct k_work *work);
+static struct k_work inject_pgps_data_work;
+
+// The pgps handler function
+static void pgps_event_handler(struct nrf_cloud_pgps_event *event);
+#endif /* CONFIG_USE_ASSISTANCE_PGPS */
+
+// Reusing the working queue
+static struct k_work_q *assistance_work_q;
+
+int assistance_init(struct k_work_q *work_q)
 {
     int err;
+
+    __ASSERT(assistance_work_q != NULL,
+             "null pointer assertion for parameter work_q");
+
+    assistance_work_q = work_q;
 
     err = nrf_cloud_coap_init();
     if (err)
@@ -27,96 +58,123 @@ int assistance_init()
         return err;
     }
 
+#if defined(CONFIG_USE_ASSISTANCE_PGPS)
+    k_work_init(&get_pgps_data_work, get_pgps_data_work_fn);
+    k_work_init(&inject_pgps_data_work, inject_pgps_data_work_fn);
+
+    struct nrf_cloud_pgps_init_param pgps_param = {
+        .event_handler = pgps_event_handler,
+        /* storage is defined by CONFIG_NRF_CLOUD_PGPS_STORAGE */
+        .storage_base = 0u,
+        .storage_size = 0u};
+
+    err = nrf_cloud_pgps_init(&pgps_param);
+    if (err)
+    {
+        LOG_ERR("Failed to initialize P-GPS");
+        return err;
+    }
+#endif /* CONFIG_USE_ASSISTANCE_PGPS */
+
     return 0;
 }
 
-#pragma region TImeCalc
-/* (6.1.1980 UTC - 1.1.1970 UTC) */
-#define GPS_TO_UNIX_UTC_OFFSET_SECONDS (315964800UL)
-/* UTC/GPS time offset as of 1st of January 2017. */
-#define GPS_TO_UTC_LEAP_SECONDS (18UL)
-#define SEC_PER_MIN (60UL)
-#define MIN_PER_HOUR (60UL)
-#define SEC_PER_HOUR (MIN_PER_HOUR * SEC_PER_MIN)
-#define HOURS_PER_DAY (24UL)
-#define SEC_PER_DAY (HOURS_PER_DAY * SEC_PER_HOUR)
-#define DAYS_PER_WEEK (7UL)
-#define PLMN_STR_MAX_LEN 8 /* MCC + MNC + quotes */
-
-static int64_t utc_to_gps_sec(const int64_t utc_sec)
+#if defined(CONFIG_USE_ASSISTANCE_PGPS)
+static void get_pgps_data_work_fn(struct k_work *work)
 {
-    return (utc_sec - GPS_TO_UNIX_UTC_OFFSET_SECONDS) + GPS_TO_UTC_LEAP_SECONDS;
-}
+    ARG_UNUSED(work);
 
-static void gps_sec_to_day_time(int64_t gps_sec,
-                                uint16_t *gps_day,
-                                uint32_t *gps_time_of_day)
-{
-    *gps_day = (uint16_t)(gps_sec / SEC_PER_DAY);
-    *gps_time_of_day = (uint32_t)(gps_sec % SEC_PER_DAY);
-}
+    int err;
 
-static void time_inject(void)
-{
-    int ret;
-    struct tm date_time;
-    int64_t utc_sec;
-    int64_t gps_sec;
-    struct nrf_modem_gnss_agnss_gps_data_system_time_and_sv_tow gps_time = {0};
-    struct nrf_modem_gnss_agnss_gps_data_utc utc_time = {0};
-
-    k_sleep(K_MSEC(10000));
-    char buf[128];
-    int timezone;
-    /* Read current UTC time from the modem. */
-    ret = nrf_modem_at_scanf("AT+CCLK?",
-                             "+CCLK: \"%u/%u/%u,%u:%u:%u\"",
-                             &date_time.tm_year,
-                             &date_time.tm_mon,
-                             &date_time.tm_mday,
-                             &date_time.tm_hour,
-                             &date_time.tm_min,
-                             &date_time.tm_sec);
-    LOG_INF("+CCLK: \"%u/%u/%u,%u:%u:%u, %d , %u",
-            date_time.tm_year,
-            date_time.tm_mon,
-            date_time.tm_mday,
-            date_time.tm_hour,
-            date_time.tm_min,
-            date_time.tm_sec, ret, timezone);
-
-    if (ret != 6)
+    // Check for connection, and wait with a timeout of 1 min
+    if (!wait_for_lte_connection(60))
     {
-        LOG_WRN("Couldn't read current time from modem, time assistance unavailable");
-        return;
+        LOG_ERR("Cannot proceed to request pgps assistance from nRfCloud as LTE is lacking connection");
+        goto onFailure;
     }
 
-    /* Convert to struct tm format. */
-    date_time.tm_year = date_time.tm_year + 2000 - 1900; /* years since 1900 */
-    date_time.tm_mon--;                                  /* months since January */
+    LOG_INF("Sending request for P-GPS predictions to nRF Cloud...");
 
-    /* Convert time to seconds since Unix time epoch (1.1.1970). */
-    utc_sec = timeutil_timegm64(&date_time);
-    /* Convert time to seconds since GPS time epoch (6.1.1980). */
-    gps_sec = utc_to_gps_sec(utc_sec);
+    struct nrf_cloud_rest_pgps_request request = {
+        .pgps_req = pgps_request};
 
-    gps_sec_to_day_time(gps_sec, &gps_time.date_day, &gps_time.time_full_s);
+    struct nrf_cloud_pgps_result file_location;
 
-    utc_time;
-
-    ret = nrf_modem_gnss_agnss_write(&gps_time, sizeof(gps_time),
-                                     NRF_MODEM_GNSS_AGNSS_GPS_SYSTEM_CLOCK_AND_TOWS);
-    if (ret != 0)
+    err = nrf_cloud_coap_pgps_url_get(&request, &file_location);
+    if (err)
     {
-        LOG_ERR("Failed to inject time, error %d", ret);
-        return;
+        LOG_ERR("Failed to retrieve the url for the PGPS, %d", err);
+        goto onFailure;
     }
 
-    LOG_INF("Injected time (GPS day %u, GPS time of day %u)",
-            gps_time.date_day, gps_time.time_full_s);
+    LOG_INF("Processing P-GPS response");
+
+    err = nrf_cloud_pgps_update(&file_location);
+    if (err)
+    {
+        LOG_ERR("Failed to process binary P-GPS data using given url, %d", err);
+        goto onFailure;
+    }
+
+    LOG_INF("P-GPS response processed");
+    return;
+
+onFailure:
+    //re-enable future retries
+    nrf_cloud_pgps_request_reset();
 }
 
-#pragma endregion TImeCalc
+static void inject_pgps_data_work_fn(struct k_work *work)
+{
+    ARG_UNUSED(work);
+
+    int err;
+
+    LOG_INF("Injecting P-GPS ephemerides");
+
+    err = nrf_cloud_pgps_inject(prediction, &agnss_need);
+    if (err)
+    {
+        LOG_ERR("Failed to inject P-GPS ephemerides");
+    }
+
+    err = nrf_cloud_pgps_preemptive_updates();
+    if (err)
+    {
+        LOG_ERR("Failed to request P-GPS updates");
+    }
+}
+
+static void pgps_event_handler(struct nrf_cloud_pgps_event *event)
+{
+    switch (event->type)
+    {
+    case PGPS_EVT_AVAILABLE:
+        prediction = event->prediction;
+
+        k_work_submit_to_queue(assistance_work_q, &inject_pgps_data_work);
+        break;
+
+    case PGPS_EVT_REQUEST:
+        // memcpy(&pgps_request, event->request, sizeof(pgps_request));
+        pgps_request = event->request;
+
+        k_work_submit_to_queue(assistance_work_q, &get_pgps_data_work);
+        break;
+
+    case PGPS_EVT_LOADING:
+        LOG_INF("Loading P-GPS predictions");
+        break;
+
+    case PGPS_EVT_READY:
+        LOG_INF("P-GPS predictions ready");
+        break;
+
+    default:
+        break;
+    }
+}
+#endif /* CONFIG_USE_ASSISTANCE_PGPS */
 
 static int serving_cell_info_get(struct lte_lc_cell *serving_cell)
 {
@@ -171,19 +229,41 @@ int assistance_request(struct nrf_modem_gnss_agnss_data_frame *agnss_request)
 {
 
     int err;
-    
-    // Check for connection, and wait with a timeout of 5 min
-    if(!wait_for_lte_connection(300))
+
+#if defined(CONFIG_USE_ASSISTANCE_PGPS)
+
+    /* Store the agnss request for pgps use. */
+    memcpy(&agnss_need, agnss_request, sizeof(agnss_need));
+
+#if defined(CONFIG_USE_ASSISTANCE_AGNSS)
+    if (!agnss_request->data_flags)
     {
-        LOG_ERR("Cannot proceed to request assistance from nRfCloud as LTE is lacking connection");
-        return -1;
+        /* No assistance needed from A-GPS, skip directly to P-GPS. */
+        nrf_cloud_pgps_notify_prediction();
+        return 0;
     }
-    
+
+    // PGPS will handle ephemerides, so skip those.
+    agnss_request->system->sv_mask_ephe = 0;
+    // Almanacs are not needed with PGPS, so skip those.
+    agnss_request->system->sv_mask_alm = 0;
+
+#endif /* CONFIG_USE_ASSISTANCE_AGNSS */
+#endif /* CONFIG_USE_ASSISTANCE_PGPS */
+
+#if defined(CONFIG_USE_ASSISTANCE_AGNSS)
+    // Check for connection, and wait with a timeout of 5 min
+    if (!wait_for_lte_connection(300))
+    {
+        LOG_ERR("Cannot proceed to request agnss assistance from nRfCloud as LTE is lacking connection");
+        goto agnss_exit;
+    }
+
     err = nrf_cloud_coap_connect(NULL);
     if (err)
     {
         LOG_ERR("Failed to connect to nRfCloud through coAp, %d", err);
-        return err;
+        goto agnss_exit;
     }
 
     struct nrf_cloud_rest_agnss_request request = {
@@ -202,19 +282,17 @@ int assistance_request(struct nrf_modem_gnss_agnss_data_frame *agnss_request)
     if (err)
     {
         LOG_ERR("Could not get cell info, error: %d", err);
-        return err;
+        goto agnss_exit;
     }
-    else
-    {
-        /* Network info for the location request. */
-        request.net_info = &net_info;
-    }
+
+    // Network info for the location request.
+    request.net_info = &net_info;
 
     err = nrf_cloud_coap_agnss_data_get(&request, &result);
     if (err)
     {
         LOG_ERR("Failed to get agnss data, error %d", err);
-        return err;
+        goto agnss_exit;
     }
 
     LOG_INF("Processing A-GNSS data");
@@ -223,14 +301,22 @@ int assistance_request(struct nrf_modem_gnss_agnss_data_frame *agnss_request)
     if (err)
     {
         LOG_ERR("Failed to process A-GNSS data, error: %d", err);
-        return err;
+        goto agnss_exit;
     }
 
     LOG_INF("A-GNSS data injected");
-    
-    return 0;
+
+agnss_exit:
+#endif /* CONFIG_USE_ASSISTANCE_AGNSS */
+
+#if defined(CONFIG_USE_ASSISTANCE_PGPS)
+    nrf_cloud_pgps_notify_prediction();
+#endif /* CONFIG_USE_ASSISTANCE_PGPS */
+
+    return err;
 }
 
+// FIXME: REMOVE
 void agnss_pgp()
 {
     int err;

@@ -49,7 +49,9 @@ static int modem_configure(void)
                 return err;
         }
         
-        //This will activate GNSS mode
+        wait_for_lte_connection(100);
+
+        //This will start GNSS mode after the lte_init
         err = gnss_init();
         if (err)
         {
@@ -78,13 +80,12 @@ int main(void)
                 LOG_ERR("Failed on modem configuration");
                 return -1;
         }
-
-
+        
         //mainThingy_init();
         //send_gps_data();
 
-
-        k_sleep(K_SECONDS(300));
+wait_for_lte_connection(100);
+       // k_sleep(K_SECONDS(300));
 
 
 

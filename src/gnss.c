@@ -36,7 +36,7 @@ int gnss_init()
 
 #if defined(CONFIG_USE_ASSISTANCE)
 
-    err = assistance_init();
+    err = assistance_init(&gnss_work_q);
     if (err)
     {
         LOG_ERR("Failed to init assistance module");
@@ -56,7 +56,7 @@ int gnss_init()
 
     k_work_init(&agnss_req_work, agnss_req_work_fn);
 
-#endif
+#endif /*CONFIG_USE_ASSISTANCE*/
 
     if (nrf_modem_gnss_event_handler_set(gnss_event_handler))
     {
@@ -79,11 +79,11 @@ int gnss_init()
     }
 
     // //FIXME: if assistance is disabled set to normal
-    // if (nrf_modem_gnss_use_case_set(NRF_MODEM_GNSS_USE_CASE_MULTIPLE_HOT_START | NRF_MODEM_GNSS_USE_CASE_SCHED_DOWNLOAD_DISABLE) != 0) {
-    // 	LOG_WRN("Failed to set GNSS use case");
-    // }
+        err = nrf_modem_gnss_use_case_set(NRF_MODEM_GNSS_USE_CASE_MULTIPLE_HOT_START | NRF_MODEM_GNSS_USE_CASE_LOW_ACCURACY | NRF_MODEM_GNSS_USE_CASE_SCHED_DOWNLOAD_DISABLE);
+    if (err) {
+    	LOG_WRN("Failed to set GNSS use case %d", err);
+    }
 
-    //k_work_init(&lte_disable_work, deactivate_lte);
 
     err = nrf_modem_gnss_start();
     if (err)
@@ -142,6 +142,8 @@ static void gnss_event_handler(int event_id)
 {
     int err;
 
+    LOG_INF("%d id", event_id);
+
     switch (event_id)
     {
     case NRF_MODEM_GNSS_EVT_PVT:
@@ -163,6 +165,9 @@ static void gnss_event_handler(int event_id)
             LOG_ERR("nrf_modem_gnss_read failed, err %d", err);
             return;
         }
+
+    LOG_INF("%d fags", pvt_data.flags);
+
 
         if (pvt_data.flags & NRF_MODEM_GNSS_PVT_FLAG_NOT_ENOUGH_WINDOW_TIME)
         {
@@ -210,7 +215,9 @@ static void gnss_event_handler(int event_id)
 
     case NRF_MODEM_GNSS_EVT_SLEEP_AFTER_TIMEOUT:
         LOG_INF("GNSS sleep after timeout");
+        dk_set_led_on(DK_LED2);
         dk_set_led_on(DK_LED1);
+        dk_set_led_on(DK_LED3);
         dk_set_led_off(DK_LED3);
 
         break;
@@ -224,7 +231,7 @@ static void gnss_event_handler(int event_id)
 
         break;
 
-//#if defined(CONFIG_USE_ASSISTANCE)
+#if defined(CONFIG_USE_ASSISTANCE)
     case NRF_MODEM_GNSS_EVT_AGNSS_REQ:
 
         LOG_INF("AGNSS support requested");
@@ -244,7 +251,7 @@ static void gnss_event_handler(int event_id)
             return;
         }
         break;
-//#endif
+#endif /*CONFIG_USE_ASSISTANCE*/
     default:
         break;
     }
@@ -280,13 +287,16 @@ static void agnss_req_work_fn(struct k_work *item)
         LOG_ERR("Failed to request assistance data");
     }
 
+    //Enabling gnss prio mode when needing additional data, which will be disabled after getting the fix
     err = nrf_modem_gnss_prio_mode_enable();
     if (err)
     {
         LOG_ERR("Error setting GNSS priority mode");
     }
+    deactivate_lte();
 }
 
+//FIXME: needed only for debug
 static void print_fix_data(struct nrf_modem_gnss_pvt_data_frame *pvt_data)
 {
     LOG_INF("Latitude:       %.06f", pvt_data->latitude);

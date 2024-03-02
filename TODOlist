@@ -1,6 +1,0 @@
-TODO:
-    Check the ipv6 support and if its worth it
-
-TODO: Avoid phragmentation of CoAP packets
-
-TODO: When no assistance is available at start, gnss will run undefinitly to download from satelites.. this is BAD.

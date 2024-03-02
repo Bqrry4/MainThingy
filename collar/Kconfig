@@ -1,15 +1,32 @@
 menu "MainThingy Settings"
 
-config UDP_DATA_UPLOAD_FREQUENCY_SECONDS
-	int "How often data is transmitted to the server"
-	default 900
-
 config SERVER_HOSTNAME
 	string "MainThingy server hostname or IP address"
 
 config SERVER_PORT
 	int "MainThingy server port number"
+	default 5683
+	default 5684 if OVER_DTLS
 
+config UDP_DATA_UPLOAD_FREQUENCY_SECONDS
+	int "How often data is transmitted to the server"
+	default 900
+
+config COAP_OVER_DTLS
+	bool "Use Coap over DTLS"
+	select MODEM_KEY_MGMT
+
+config SOCK_SEC_TAG
+	int "The sec_tag for the socket, which will connect to the server"
+	default 12
+
+config SOCK_PSK_IDENTITY
+	string "The psk identity"
+	default "identity"
+
+config SOCK_PSK_SECRET
+	string "Server PSK in hex"
+	default "736563726574"
 
 config USE_ASSISTANCE
 	bool "Use assistance module"

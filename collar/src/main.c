@@ -9,6 +9,8 @@
 #include <dk_buttons_and_leds.h>
 #include <nrf_modem_at.h>
 #include <zephyr/sys/timeutil.h>
+#include <modem/modem_key_mgmt.h>
+
 
 LOG_MODULE_REGISTER(MainThingy, LOG_LEVEL_INF);
 
@@ -26,6 +28,23 @@ static int modem_configure(void)
                 LOG_ERR("Modem library initialization failed, error: %d", err);
                 return err;
         }
+
+#if defined(CONFIG_COAP_OVER_DTLS)
+        //Writing the pre-shared key to modem
+        err = modem_key_mgmt_write(CONFIG_SOCK_SEC_TAG, MODEM_KEY_MGMT_CRED_TYPE_IDENTITY, CONFIG_SOCK_PSK_IDENTITY,
+                                                                strlen(CONFIG_SOCK_PSK_IDENTITY));
+        if (err) {
+                LOG_ERR("Failed to write identity: %d\n", err);
+                return err;
+        }
+
+        err = modem_key_mgmt_write(CONFIG_SOCK_SEC_TAG, MODEM_KEY_MGMT_CRED_TYPE_PSK, CONFIG_SOCK_PSK_SECRET,
+                                                                strlen(CONFIG_SOCK_PSK_SECRET));
+        if (err) {
+                LOG_ERR("Failed to write identity: %d\n", err);
+                return err;
+        }
+#endif /*CONFIG_COAP_OVER_DTLS*/
 
         err = lte_lc_init();
         if (err)
@@ -81,10 +100,11 @@ int main(void)
                 return -1;
         }
         
-        //mainThingy_init();
-        //send_gps_data();
-
 wait_for_lte_connection(100);
+
+        mainThingy_init();
+        send_gps_data();
+
        // k_sleep(K_SECONDS(300));
 
 

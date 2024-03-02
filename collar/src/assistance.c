@@ -228,7 +228,7 @@ static int serving_cell_info_get(struct lte_lc_cell *serving_cell)
 int assistance_request(struct nrf_modem_gnss_agnss_data_frame *agnss_request)
 {
 
-    int err;
+    int err = 0;
 
 #if defined(CONFIG_USE_ASSISTANCE_PGPS)
 
@@ -277,7 +277,7 @@ int assistance_request(struct nrf_modem_gnss_agnss_data_frame *agnss_request)
 
     struct lte_lc_cells_info net_info = {0};
 
-    // FIXME: Seems that it can crash the app if .net_info is NULL
+    // Warning: Seems that it can crash the app if .net_info is NULL
     err = serving_cell_info_get(&net_info.current_cell);
     if (err)
     {
@@ -314,39 +314,4 @@ agnss_exit:
 #endif /* CONFIG_USE_ASSISTANCE_PGPS */
 
     return err;
-}
-
-// FIXME: REMOVE
-void agnss_pgp()
-{
-    int err;
-
-    struct nrf_cloud_rest_agnss_request request = {
-        .type = NRF_CLOUD_REST_AGNSS_REQ_CUSTOM,
-        .agnss_req = NULL,
-        .net_info = NULL};
-    struct nrf_cloud_rest_agnss_result result;
-
-    // FIXME:
-    // TESTING
-    request.type = NRF_CLOUD_REST_AGNSS_REQ_LOCATION;
-    request.agnss_req = NULL;
-    request.filtered = true;
-    request.mask_angle = NRF_CLOUD_AGNSS_MASK_ANGLE_NONE;
-    request.net_info = NULL;
-
-    uint8_t buff[1024];
-
-    result.buf = buff;
-    result.buf_sz = sizeof(buff);
-
-    // err = nrf_cloud_coap_agnss_data_get(&request, &result);
-    if (err)
-    {
-        LOG_ERR("Failed to get agnss data., error %d", err);
-    }
-
-    struct nrf_modem_gnss_agnss_data_frame agnss_data;
-
-    // nrf_modem_gnss_agnss_write(result.buf, result.agnss_sz, 0);
 }

@@ -24,6 +24,8 @@ int lte_init()
         LOG_ERR("Connecting to LTE network failed, error: %d", err);
         return err;
     }
+
+    return 0;
 }
 
 int activate_lte()
@@ -71,7 +73,7 @@ int deactivate_lte()
     return 0;
 }
 
-bool wait_for_lte_connection(uint8_t seconds)
+bool wait_for_lte_connection(uint16_t seconds)
 {
     for (int i = 0; i < seconds; ++i)
     {

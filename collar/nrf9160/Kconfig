@@ -1,0 +1,31 @@
+menu "MainThingy Settings"
+
+config USE_ASSISTANCE
+	bool "Use assistance module"
+
+config USE_ASSISTANCE_AGNSS
+	bool "Use agnss assistance"
+	select NRF_CLOUD_AGNSS
+	
+config USE_ASSISTANCE_PGPS
+	bool "Use pgps assistance"
+	select NRF_CLOUD_PGPS
+	select FLASH
+	select FLASH_MAP
+	select STREAM_FLASH
+	select FCB
+	select DATE_TIME
+
+
+	rsource "src/modem/Kconfig"
+	rsource "src/server_exchange/Kconfig"
+endmenu
+
+
+module = Main
+module-str = MainThingy
+source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"
+
+menu "Zephyr Kernel"
+source "Kconfig.zephyr"
+endmenu

@@ -1,0 +1,32 @@
+menu "Server identification"
+
+config SERVER_HOSTNAME
+	string "Server Hostname  or IP address"
+
+config SERVER_PORT
+	int "Server Port"
+	default 5683
+	default 5684 if OVER_DTLS
+
+config COAP_OVER_DTLS
+	bool "Use Coap over DTLS"
+	select MODEM_KEY_MGMT
+
+#Setting for when COAP_OVER_DTLS is enabled
+config SOCK_SEC_TAG
+	int "The sec_tag for the socket, which will connect to the server"
+	default 12
+
+config SOCK_PSK_IDENTITY
+	string "The PSK identity"
+	default "identity"
+
+config SOCK_PSK_SECRET
+	string "Server PSK in hex"
+	default "736563726574"
+
+endmenu
+
+module = SERVER_EXCHANGE
+module-str = Server Exchange
+source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"

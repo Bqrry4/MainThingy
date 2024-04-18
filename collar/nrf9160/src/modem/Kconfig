@@ -1,0 +1,47 @@
+menu "Lte settings"
+
+config LTE_PSM_ENABLE
+	bool "Enable LTE Power Saving Mode"
+	default y
+
+config LTE_EDRX_ENABLE
+	bool "Enable LTE enhanced Discontinuous Reception"
+	default y
+
+config LTE_RAI_ENABLE
+	bool "Enable LTE Release Assistance Indication"
+endmenu
+
+menu "GNSS settings"
+
+config GNSS_PERIODIC_INTERVAL
+	int "Fix interval for periodic GPS fixes"
+	range 10 65535
+	default 120
+	help
+	  Fix interval (in seconds) for periodic fixes.
+
+config GNSS_PERIODIC_TIMEOUT
+	int "Fix timeout for periodic GPS fixes"
+	range 0 65535
+	default 480
+	help
+	  Fix timeout (in seconds) for periodic fixes.
+	  If set to zero, GNSS is allowed to run indefinitely until a valid PVT estimate is produced.
+
+config GNSS_DYNAMICS_MODE
+	int "The dynamics mode for improving positioning performance"
+	range 0 3
+	default 0
+	help
+		The dynamics mode can be changed without disruption in positioning.
+		The selected dynamics mode is stored into the non-volatile memory.
+
+		For the nrf9160 with the currently modem firmware version older(lower) than v2.0.0, all modes assuming maximum speed 100 km/h.
+		Check the documentation for the newest stable sdk!!
+
+endmenu
+
+module = MODEM
+module-str = Modem
+source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"

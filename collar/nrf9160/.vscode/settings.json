@@ -1,0 +1,41 @@
+{
+    "files.associations": {
+        "cstdio": "c",
+        "modem_config.h": "c",
+        "dk_buttons_and_leds.h": "c",
+        "cerrno": "c",
+        "json.h": "c",
+        "zcbor_common.h": "c",
+        "zcbor_encode.h": "c",
+        "coap.h": "c",
+        "nrf_cloud_coap.h": "c",
+        "nrf_cloud.h": "c",
+        "nrf_cloud_agnss.h": "c",
+        "nrf_cloud_rest.h": "c",
+        "nrf_modem_gnss.h": "c",
+        "assistance.h": "c",
+        "array": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "log.h": "c",
+        "functional": "c",
+        "nrf_cloud_coap_transport.h": "c",
+        "cjson.h": "c",
+        "byteorder.h": "c",
+        "nrfc_dtls.h": "c",
+        "slist.h": "c",
+        "nrf_modem_at.h": "c",
+        "tls_credentials.h": "c",
+        "zcbor_decode.h": "c",
+        "nrf_modem_lib.h": "c",
+        "kernel.h": "c",
+        "lte_lc.h": "c",
+        "timeutil.h": "c",
+        "device.h": "c"
+    },
+    "nrf-connect.topdir": "${nrf-connect.sdk:2.5.2}",
+    "nrf-connect.toolchain.path": "${nrf-connect.toolchain:2.5.2}",
+    "nrf-connect.boardRoots": [
+        "${workspaceFolder}\\board"
+    ]
+}

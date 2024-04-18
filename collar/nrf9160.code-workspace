@@ -1,0 +1,32 @@
+{
+	"folders": [
+		{
+			"path": "nrf9160"
+		},
+		{
+			"path": "nrf52840"
+		}
+	],
+	"settings": {
+		"nrf-connect.toolchain.path": "${nrf-connect.toolchain:2.6.0}",
+		"nrf-connect.topdir": "${nrf-connect.sdk:2.6.0}",
+		"files.associations": {
+			"ble.h": "c",
+			"gap.h": "c",
+			"kernel.h": "c",
+			"addr.h": "c",
+			"log.h": "c",
+			"uart.h": "c",
+			"_default_types.h": "c",
+			"compare": "c",
+			"unordered_map": "c",
+			"random": "c",
+			"*.tcc": "c",
+			"devicetree.h": "c",
+			"uart_channel.h": "c"
+		},
+		"nrf-connect.boardRoots": [
+			"${workspaceFolder:nrf52840}\\board\\"
+		]
+	}
+}

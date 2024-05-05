@@ -1,6 +1,9 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    kotlin("kapt")
+    id("com.google.dagger.hilt.android")
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
@@ -35,6 +38,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -56,6 +60,34 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.material.icons.extended.android)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.preference)
+    // Hilt
+    implementation(libs.hilt.android)
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    kapt(libs.hilt.android.compiler)
+
+    // Google maps
+    implementation(libs.play.services.maps)
+    implementation(libs.play.services.location)
+    implementation(libs.maps.compose)
+    implementation(libs.maps.ktx)
+    implementation(libs.maps.utils.ktx)
+    // OpenStreetMaps
+    implementation(libs.osmdroid.android)
+
+    //Ble
+    implementation(libs.scanner)
+    implementation(libs.client)
+    //Permission
+    implementation(libs.google.accompanist.permissions)
+//    implementation(libs.permissions.ble)
+////    {
+////        exclude(group = "no.nordicsemi.android.common", module = "theme")
+////    }
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -63,4 +95,9 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+}
+
+// Allow references to generated code
+kapt {
+    correctErrorTypes = true
 }

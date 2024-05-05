@@ -16,7 +16,6 @@ config USE_ASSISTANCE_PGPS
 	select FCB
 	select DATE_TIME
 
-
 	rsource "src/modem/Kconfig"
 	rsource "src/server_exchange/Kconfig"
 endmenu

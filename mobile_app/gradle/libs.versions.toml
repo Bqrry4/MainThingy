@@ -1,16 +1,40 @@
 [versions]
-agp = "8.3.0"
+accompanistPermissionsVersion = "0.30.0"
 kotlin = "1.9.0"
-coreKtx = "1.10.1"
+hilt = "2.51.1"
+advertiser = "1.0.14"
+agp = "8.3.2"
+hiltNavigationCompose = "1.2.0"
+coreKtx = "1.13.1"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
-lifecycleRuntimeKtx = "2.6.1"
-activityCompose = "1.7.0"
-composeBom = "2023.08.00"
+lifecycleRuntimeKtx = "2.7.0"
+activityCompose = "1.9.0"
+composeBom = "2024.05.00"
+mapsCompose = "2.11.5"
+mapsKtx = "3.3.0"
+mapsUtilsKtx = "3.2.1"
+material = "1.6.7"
+navigationCompose = "2.7.7"
+osmdroidAndroid = "6.1.14"
+permissionsBle = "1.9.5"
+playServicesLocation = "21.2.0"
+playServicesMaps = "18.2.0"
+preference = "1.2.1"
+secretsGradlePluginVersion = "2.0.1"
+lifecycleRuntimeCompose = "2.7.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+androidx-material-icons-extended-android = { module = "androidx.compose.material:material-icons-extended-android", version.ref = "material" }
+androidx-preference = { module = "androidx.preference:preference", version.ref = "preference" }
+client = { module = "no.nordicsemi.android.kotlin.ble:client", version.ref = "advertiser" }
+google-accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissionsVersion" }
+google-secrets-gradle-plugin = { module = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin", version.ref = "secretsGradlePluginVersion" }
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
+hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -24,8 +48,19 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "mapsCompose" }
+maps-ktx = { module = "com.google.maps.android:maps-ktx", version.ref = "mapsKtx" }
+maps-utils-ktx = { module = "com.google.maps.android:maps-utils-ktx", version.ref = "mapsUtilsKtx" }
+osmdroid-android = { module = "org.osmdroid:osmdroid-android", version.ref = "osmdroidAndroid" }
+permissions-ble = { module = "no.nordicsemi.android.common:permissions-ble", version.ref = "permissionsBle" }
+play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
+play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
+scanner = { module = "no.nordicsemi.android.kotlin.ble:scanner", version.ref = "advertiser" }
+androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+hiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "hilt"}
 

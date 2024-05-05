@@ -1,6 +1,0 @@
-# Copyright (c) 2024 Nordic Semiconductor ASA
-# SPDX-License-Identifier: Apache-2.0
-
-config BOARD_NYANTHINGY_NRF9160
-	bool "NyanThingy nrf9160"
-	depends on SOC_NRF9160_SICA

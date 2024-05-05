@@ -3,6 +3,7 @@
 
 #include "modem/modem_config.h"
 #include "uart_channel/uart_channel.h"
+#include "battery_monitor.h"
 
 LOG_MODULE_REGISTER(MainThingy, LOG_LEVEL_INF);
 
@@ -10,7 +11,7 @@ int main(void)
 {
         int err;
 
-        uart_init();
+        //uart_init();
         // LOG_INF("Starting app");
 
         // if (modem_configure())
@@ -23,6 +24,15 @@ int main(void)
 
         // server_exchange_init();
         // send_gps_data();
+        
+		uint8_t c;
+        while (true)
+        {
+			battery_monitor_read(&c);
+			LOG_INF("%d", c);
+        };
+        
+
 
         return 0;
 }

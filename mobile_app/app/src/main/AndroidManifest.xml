@@ -2,7 +2,40 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Bluetooth Low Energy -->
+    <uses-feature android:name="android.hardware.bluetooth_le" />
+    <!-- For 30 sdk and below -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
+    <!-- For 31 sdk and above -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <!--        android:usesPermissionFlags="neverForLocation"-->
+    <!--        tools:targetApi="S"-->
+
+
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- Required on Android 4.3 - 11 in order to communicate with Bluetooth LE devices. -->
+
+    <!-- Required on Android 4.3 - 11 in order to scan for Bluetooth LE devices. -->
+
+    <!-- This permission is required in order to connect to a Bluetooth LE device on Android 12 onwards. -->
+
+
+    <uses-feature android:name="android.hardware.location.network" />
+    <uses-feature android:name="android.hardware.location.gps" />
+
+
     <application
+        android:name=".NyanThingyApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -12,6 +45,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.NyanthingyApp"
         tools:targetApi="31">
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${GOOGLE_MAPS_API_KEY}" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

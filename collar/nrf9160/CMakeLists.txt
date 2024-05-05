@@ -6,7 +6,13 @@ project(NRF9160)
 # Entry point
 target_sources(app PRIVATE src/main.c)
 
+zephyr_include_directories(src)
+zephyr_library_include_directories(
+  src/battery_monitor
+  )
+
 # App directories
 add_subdirectory(src/modem)
 add_subdirectory(src/server_exchange)
 add_subdirectory(src/uart_channel)
+add_subdirectory(src/battery_monitor)

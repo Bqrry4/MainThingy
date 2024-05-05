@@ -23,7 +23,9 @@
 			"random": "c",
 			"*.tcc": "c",
 			"devicetree.h": "c",
-			"uart_channel.h": "c"
+			"uart_channel.h": "c",
+			"adp536x.h": "c",
+			"battery_monitor.h": "c"
 		},
 		"nrf-connect.boardRoots": [
 			"${workspaceFolder:nrf52840}\\board\\"

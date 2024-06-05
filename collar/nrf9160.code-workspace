@@ -25,7 +25,10 @@
 			"devicetree.h": "c",
 			"uart_channel.h": "c",
 			"adp536x.h": "c",
-			"battery_monitor.h": "c"
+			"battery_monitor.h": "c",
+			"array": "c",
+			"string": "c",
+			"string_view": "c"
 		},
 		"nrf-connect.boardRoots": [
 			"${workspaceFolder:nrf52840}\\board\\"

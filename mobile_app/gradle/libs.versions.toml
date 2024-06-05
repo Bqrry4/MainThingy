@@ -1,7 +1,9 @@
 [versions]
 accompanistPermissionsVersion = "0.30.0"
+coilComposeVersion = "2.6.0"
 kotlin = "1.9.0"
 hilt = "2.51.1"
+ksp = "1.9.20-1.0.14"
 advertiser = "1.0.14"
 agp = "8.3.2"
 hiltNavigationCompose = "1.2.0"
@@ -12,16 +14,16 @@ espressoCore = "3.5.1"
 lifecycleRuntimeKtx = "2.7.0"
 activityCompose = "1.9.0"
 composeBom = "2024.05.00"
-mapsCompose = "2.11.5"
-mapsKtx = "3.3.0"
+mapsCompose = "5.0.1"
+mapsKtx = "5.0.0"
 mapsUtilsKtx = "3.2.1"
 material = "1.6.7"
 navigationCompose = "2.7.7"
 osmdroidAndroid = "6.1.14"
-permissionsBle = "1.9.5"
 playServicesLocation = "21.2.0"
 playServicesMaps = "18.2.0"
 preference = "1.2.1"
+roomVersion = "2.6.0"
 secretsGradlePluginVersion = "2.0.1"
 lifecycleRuntimeCompose = "2.7.0"
 
@@ -30,7 +32,11 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-material-icons-extended-android = { module = "androidx.compose.material:material-icons-extended-android", version.ref = "material" }
 androidx-preference = { module = "androidx.preference:preference", version.ref = "preference" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomVersion" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomVersion" }
 client = { module = "no.nordicsemi.android.kotlin.ble:client", version.ref = "advertiser" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilComposeVersion" }
 google-accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissionsVersion" }
 google-secrets-gradle-plugin = { module = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin", version.ref = "secretsGradlePluginVersion" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
@@ -53,7 +59,6 @@ maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = 
 maps-ktx = { module = "com.google.maps.android:maps-ktx", version.ref = "mapsKtx" }
 maps-utils-ktx = { module = "com.google.maps.android:maps-utils-ktx", version.ref = "mapsUtilsKtx" }
 osmdroid-android = { module = "org.osmdroid:osmdroid-android", version.ref = "osmdroidAndroid" }
-permissions-ble = { module = "no.nordicsemi.android.common:permissions-ble", version.ref = "permissionsBle" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
 scanner = { module = "no.nordicsemi.android.kotlin.ble:scanner", version.ref = "advertiser" }
@@ -62,5 +67,5 @@ androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lif
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-hiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "hilt"}
-
+hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt"}
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp"}

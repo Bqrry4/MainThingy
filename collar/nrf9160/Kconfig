@@ -18,6 +18,7 @@ config USE_ASSISTANCE_PGPS
 
 	rsource "src/modem/Kconfig"
 	rsource "src/server_exchange/Kconfig"
+	rsource "src/uart_channel/Kconfig"
 endmenu
 
 

@@ -1,9 +1,10 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
-    kotlin("kapt")
-    id("com.google.dagger.hilt.android")
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+    //kotlin("kapt")
 }
 
 android {
@@ -67,7 +68,7 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
-    kapt(libs.hilt.android.compiler)
+    ksp(libs.hilt.android.compiler)
 
     // Google maps
     implementation(libs.play.services.maps)
@@ -81,13 +82,19 @@ dependencies {
     //Ble
     implementation(libs.scanner)
     implementation(libs.client)
+
     //Permission
     implementation(libs.google.accompanist.permissions)
-//    implementation(libs.permissions.ble)
-////    {
-////        exclude(group = "no.nordicsemi.android.common", module = "theme")
-////    }
 
+    //Room
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+
+    //Coil
+    implementation(libs.coil.compose)
+
+    //Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -97,7 +104,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 }
 
-// Allow references to generated code
-kapt {
-    correctErrorTypes = true
-}
+//// Allow references to generated code
+//kapt {
+//    correctErrorTypes = true
+//}

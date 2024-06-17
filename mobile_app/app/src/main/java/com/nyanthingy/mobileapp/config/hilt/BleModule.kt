@@ -1,6 +1,11 @@
 package com.nyanthingy.mobileapp.config.hilt
 
 import android.content.Context
+import com.nyanthingy.mobileapp.modules.ble.scanner.repository.ScannerRepository
+import com.nyanthingy.mobileapp.modules.ble.scanner.repository.ScannerRepositoryImpl
+import com.nyanthingy.mobileapp.modules.database.profile.repository.ProfileRepositoryDB
+import com.nyanthingy.mobileapp.modules.profile.repository.ProfileRepository
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,4 +24,10 @@ interface BleModule {
             @ApplicationContext context: Context
         ) = BleScanner(context)
     }
+
+    @Binds
+    fun bindScannerRepository(
+        scannerRepository: ScannerRepositoryImpl
+    ): ScannerRepository
+
 }

@@ -9,11 +9,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 
 @Composable
 fun CircularProgressWithIcon(
     imageVector: ImageVector,
+    progressColor: Color,
     modifier: Modifier = Modifier
     ) {
     Box(
@@ -21,6 +23,6 @@ fun CircularProgressWithIcon(
         modifier = modifier
     ) {
         Icon(imageVector = imageVector, null)
-        CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
+        CircularProgressIndicator(color = progressColor)
     }
 }

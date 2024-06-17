@@ -1,4 +1,4 @@
-package com.nyanthingy.mobileapp.modules.database.model
+package com.nyanthingy.mobileapp.modules.database.profile.model
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -16,7 +16,6 @@ interface ProfileDao {
     suspend fun update(profileEntry: ProfileEntry)
     @Delete
     suspend fun delete(profileEntry: ProfileEntry)
-
     @Query("SELECT * from profiles")
     fun getAll(): Flow<List<ProfileEntry>>
 }

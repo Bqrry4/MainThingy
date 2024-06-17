@@ -24,10 +24,6 @@ sealed class ScanningState {
         val bonded: List<BleScanResults> = devices.filter { it.device.isBonded }
         val notBonded: List<BleScanResults> = devices.filter { !it.device.isBonded }
     }
-
-    fun isRunning(): Boolean {
-        return this is Loading || this is DevicesDiscovered
-    }
 }
 
 data class DevicesScanFilter(
@@ -47,7 +43,6 @@ class ScannerViewModel @Inject constructor(
     init {
         processScanResultFlow()
     }
-
         val filterConfig = MutableStateFlow(
         DevicesScanFilter(
             filterUuidRequired = true,

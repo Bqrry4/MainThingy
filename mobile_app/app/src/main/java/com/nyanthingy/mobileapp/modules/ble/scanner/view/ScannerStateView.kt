@@ -1,8 +1,11 @@
 package com.nyanthingy.mobileapp.modules.ble.scanner.view
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.nyanthingy.mobileapp.ui.theme.NyanthingyAppTheme
 import com.nyanthingy.mobileapp.modules.ble.scanner.viewmodel.ScanningState
 import com.nyanthingy.mobileapp.modules.commons.view.CircularProgressWithIcon
+import no.nordicsemi.android.kotlin.ble.core.scanner.BleScanResult
 
 @Composable
 fun ScannerStateView(
@@ -27,44 +31,49 @@ fun ScannerStateView(
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
-        modifier = modifier, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp)
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp)
     ) {
 
         when (state) {
             is ScanningState.Loading -> item {
-//                Box(contentAlignment = Alignment.Center) {
-//                    Icon(imageVector = Icons.AutoMirrored.Filled.BluetoothSearching, null)
-//                    CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
-//                }
-                CircularProgressWithIcon(
-                    imageVector = Icons.AutoMirrored.Filled.BluetoothSearching
-                )
+                ScanEmptyView()
             }
 
             is ScanningState.DevicesDiscovered -> {
                 if (state.devices.isEmpty()) {
-                    item { ScanEmptyView() }
+                    item {
+                        ScanEmptyView()
+                    }
                 } else {
                     DeviceListItems(state,
-                        {},
-                        { ListBleDevice(it.advertisedName ?: it.device.name, it.device.address) })
+                        {
+                            println(it.toString())
+                        },
+                        {
+                            ListBleDevice(it.advertisedName ?: it.device.name, it.device.address)
+                        }
+                    )
                 }
             }
 
-            is ScanningState.Error -> item { Text("error" + state.errorCode) }
+            is ScanningState.Error -> item {
+                Text("error" + state.errorCode)
+            }
         }
     }
 }
 
 @Composable
 fun ScanEmptyView() {
-    Row {
-        Text(text = "Scanning...")
-        CircularProgressIndicator(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .size(30.dp),
-            color = MaterialTheme.colorScheme.onPrimary
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.fillMaxSize()
+    )
+    {
+        CircularProgressWithIcon(
+            imageVector = Icons.AutoMirrored.Filled.BluetoothSearching,
+            progressColor = MaterialTheme.colorScheme.onPrimary
         )
     }
 }
@@ -83,13 +92,5 @@ fun ScannerStateViewPreviewWhenLoading() {
 fun ScannerStateViewPreviewWhenError() {
     NyanthingyAppTheme {
         ScannerStateView(ScanningState.Error(0))
-    }
-}
-
-@Preview
-@Composable
-fun ScannerStateViewPreviewWhenDevicesListEmpty() {
-    NyanthingyAppTheme {
-        ScannerStateView(ScanningState.DevicesDiscovered(emptyList()))
     }
 }

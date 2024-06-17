@@ -1,8 +1,6 @@
 package com.nyanthingy.mobileapp.modules.profile.view
 
-import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -34,16 +32,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.nyanthingy.mobileapp.modules.ble.scanner.viewmodel.ScannerViewModel
 import com.nyanthingy.mobileapp.modules.commons.extensions.clearFocusOnTap
-import com.nyanthingy.mobileapp.modules.database.model.ProfileEntry
+import com.nyanthingy.mobileapp.modules.database.profile.model.ProfileEntry
+import com.nyanthingy.mobileapp.modules.profile.model.ProfileModel
 import com.nyanthingy.mobileapp.modules.profile.viewmodel.ProfileViewModel
 import com.nyanthingy.mobileapp.ui.navigation.navigator.NavigationViewModel
 import com.nyanthingy.mobileapp.ui.theme.NyanthingyAppTheme
@@ -88,22 +85,15 @@ fun AddProfileView(
     )
 
 
-//    val contentResolver = LocalContext.current.contentResolver
-//    val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-//    contentResolver.takePersistableUriPermission(profileImage!!, flags)
-
-
     //function to be called on save button press
     val saveProfile = suspend {
 
-        //checks for validity
-
-
-
+        //FIXME: checks for validity
         profileViewModel.insert(
-            ProfileEntry(
+            ProfileModel(
                 name = profileName,
-                profileImageUri = profileImage.toString()
+                profileImageUri = profileImage.toString(),
+                coverImageUri = coverImage?.toString()
             )
         )
     }

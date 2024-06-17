@@ -1,42 +1,37 @@
-//package com.nyanthingy.mobileapp.modules.map.view.maps.osmdroid
-//
-//import androidx.compose.runtime.Composable
-//import androidx.compose.runtime.remember
-//import androidx.compose.ui.platform.LocalContext
-//import androidx.lifecycle.Lifecycle
-//import androidx.lifecycle.LifecycleEventObserver
-//import org.osmdroid.views.MapView
-//
-//@Composable
-//fun rememberMapViewWithLifecycle(): MapView {
-//    val context = LocalContext.current
-//    val mapView = remember {
-//        MapView(context).apply {
-//            id = R.id.map
-//        }
-//    }
-//
-//    // Makes MapView follow the lifecycle of this composable
-//    val lifecycleObserver = rememberMapLifecycleObserver(mapView)
-//    val lifecycle = LocalLifecycleOwner.current.lifecycle
-//    DisposableEffect(lifecycle) {
-//        lifecycle.addObserver(lifecycleObserver)
-//        onDispose {
-//            lifecycle.removeObserver(lifecycleObserver)
-//        }
-//    }
-//
-//    return mapView
-//}
-//
-//@Composable
-//fun rememberMapLifecycleObserver(mapView: MapView): LifecycleEventObserver =
-//    remember(mapView) {
-//        LifecycleEventObserver { _, event ->
-//            when (event) {
-//                Lifecycle.Event.ON_RESUME -> mapView.onResume()
-//                Lifecycle.Event.ON_PAUSE -> mapView.onPause()
-//                else -> {}
-//            }
-//        }
-//    }
+package com.nyanthingy.mobileapp.modules.map.view.maps.osmdroid
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import org.osmdroid.views.MapView
+
+
+@Composable
+fun MapLifecycle(mapView: MapView) {
+    val context = LocalContext.current
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+
+    DisposableEffect(context, lifecycle, mapView) {
+        val lifecycleObserver = mapView.lifecycleObserver()
+        lifecycle.addObserver(lifecycleObserver)
+
+        onDispose {
+            lifecycle.removeObserver(lifecycleObserver)
+        }
+    }
+}
+
+private fun MapView.lifecycleObserver(): LifecycleEventObserver =
+    LifecycleEventObserver { _, event ->
+        when (event) {
+            Lifecycle.Event.ON_RESUME -> this.onResume()
+            Lifecycle.Event.ON_PAUSE -> this.onPause()
+            Lifecycle.Event.ON_DESTROY -> {
+                this.onDetach()
+            }
+            else ->  {}
+        }
+    }

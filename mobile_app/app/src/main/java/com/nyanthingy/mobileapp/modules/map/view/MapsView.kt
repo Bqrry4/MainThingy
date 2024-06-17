@@ -8,34 +8,70 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MapStyleOptions
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapProperties
-import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.rememberCameraPositionState
-import com.nyanthingy.mobileapp.R
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.nyanthingy.mobileapp.modules.location.viewmodel.LocationViewModel
+import com.nyanthingy.mobileapp.modules.map.view.maps.MapsProjection
+import com.nyanthingy.mobileapp.modules.map.view.maps.gmaps.GoogleMapsView
 import com.nyanthingy.mobileapp.modules.map.view.maps.osmdroid.OsmdroidMapView
+import com.nyanthingy.mobileapp.modules.map.viewmodel.FocusCameraPosition
+import com.nyanthingy.mobileapp.modules.map.utils.GeoPosition
+import com.nyanthingy.mobileapp.modules.map.view.overlay.CircleOverlay
 import com.nyanthingy.mobileapp.modules.map.viewmodel.MapPreferencesViewModel
 import com.nyanthingy.mobileapp.modules.map.viewmodel.MapSelection
+import com.nyanthingy.mobileapp.modules.map.viewmodel.MapsProperties
+import com.nyanthingy.mobileapp.modules.map.viewmodel.OnLocationState
+import com.nyanthingy.mobileapp.modules.map.virtualfences.viewmodel.VirtualFencesViewModel
 import com.nyanthingy.mobileapp.modules.permissions.RequireLocation
+import kotlinx.coroutines.launch
 
 @Composable
 fun MapsView() {
     RequireLocation(whenNotAvailable = {
         Text(text = it.toString())
     }) {
+        val preferences = hiltViewModel<MapPreferencesViewModel>()
+        val location = hiltViewModel<LocationViewModel>()
+        val virtualFences = hiltViewModel<VirtualFencesViewModel>()
 
-        val viewModel = hiltViewModel<MapPreferencesViewModel>()
+        //change state when user moves the map
+        val onCameraMoving = {
+            preferences.trackLocationState = OnLocationState.FREE_ROAM
+        }
+
+        //persist camera on map dispose
+        val persistFocusCamera: (FocusCameraPosition) -> Unit = {
+            preferences.focusCameraPosition = it
+        }
+
+        //Behaviour for trackLocation action
+        when (preferences.trackLocationState) {
+            OnLocationState.ON_USER -> {
+                val currentLocation by location.currentLocation.collectAsStateWithLifecycle()
+                //return null or the value
+                currentLocation?.let {
+                    preferences.focusCameraPosition = FocusCameraPosition(
+                        GeoPosition(
+                            latitude = it.latitude,
+                            longitude = it.longitude,
+                        ),
+                        zoomLevel = MapsProperties.MapMaximZoomLevel
+                    )
+                }
+            }
+
+            OnLocationState.ON_MEAN_POINT -> {
+                //TODO:
+            }
+
+            else -> {}
+        }
 
         var showMapPreferencesSheet by remember { mutableStateOf(false) }
-
         if (showMapPreferencesSheet) {
             MapPreferencesBottomSheet(
                 onDismiss = {
@@ -44,44 +80,115 @@ fun MapsView() {
             )
         }
 
-        val coords = LatLng(47.147503, 27.604764)
+        val virtualFencesState by virtualFences.state.collectAsStateWithLifecycle()
+        //build the overlay list
+        val overlays: List<@Composable ((MapsProjection) -> Unit)>? =
+            when (preferences.showVirtualFences) {
 
-        val cameraPositionState = rememberCameraPositionState {
-            position = CameraPosition.fromLatLngZoom(coords, 15f)
-        }
+                true -> virtualFencesState.virtualFencesList.map { virtualFence ->
+                    { projection ->
+                        val coroutineScope = rememberCoroutineScope()
 
-        when (viewModel.mapType) {
+                        var editMode by remember {
+                            mutableStateOf(false)
+                        }
+
+                        CircleOverlay(
+                            center = virtualFence.center,
+                            radius = virtualFence.radius,
+                            projection = projection,
+                            editMode = editMode,
+                            onEditModeChange = {
+                                editMode = it
+                            },
+                            onModified = { position, radius ->
+                            coroutineScope.launch {
+                                virtualFences.update(
+                                    virtualFence.copy(
+                                        center = position,
+                                        radius = radius
+                                    )
+                                )
+                            }
+                        }
+                        )
+                    }
+                }
+
+
+//                    listOf(
+//                    {
+//                        var editMode by remember {
+//                            mutableStateOf(false)
+//                        }
+//                        var position by remember {
+//                            mutableStateOf(GeoPosition(47.154005998392535, 27.593949871427842))
+//                        }
+//
+//                        var radius by remember {
+//                            mutableDoubleStateOf(150.0)
+//                        }
+//                        CircleOverlay(
+//                            center = position,
+//                            radius = radius,
+//                            projection = it,
+//                            editMode = editMode,
+//                            onEditModeChange = { editModeValue ->
+//                                editMode = editModeValue
+//                            },
+//                            onModified = { geoPosition, geoRadius ->
+//                                position = geoPosition
+//                                radius = geoRadius
+//                            }
+//                        )
+//                    },
+//                    {
+//                        CircleOverlay(
+//                            center = GeoPosition(47.157639582381286, 27.604728770613246),
+//                            radius = 100.0,
+//                            projection = it
+//                        )
+//                    },
+//                )
+
+                false -> null
+            }
+
+        //Render maps
+        val darkMode = isSystemInDarkTheme()
+        when (preferences.mapType) {
             is MapSelection.Google -> {
-                //Load the map night mode
-                val mapStyleOptions: MapStyleOptions? = if (isSystemInDarkTheme())
-                    MapStyleOptions.loadRawResourceStyle(
-                        LocalContext.current, R.raw.google_maps_night_mode
-                    ) else null
-
-                GoogleMap(
+                GoogleMapsView(
+                    mapType = (preferences.mapType as MapSelection.Google).type,
+                    darkMode = darkMode,
+                    focusCameraPosition = preferences.focusCameraPosition,
                     contentPadding = PaddingValues(20.dp),
-                    cameraPositionState = cameraPositionState,
-                    uiSettings = MapUiSettings(
-                        compassEnabled = false,
-                        zoomControlsEnabled = false,
-                        myLocationButtonEnabled = false
-                    ),
-                    properties = MapProperties(
-                        isMyLocationEnabled = true,
-                        mapType = (viewModel.mapType as MapSelection.Google).type,
-                        mapStyleOptions = mapStyleOptions
-                    )
+                    onCameraMoving = onCameraMoving,
+                    onCameraChange = persistFocusCamera,
+                    overlays = overlays,
                 )
             }
 
             is MapSelection.OsmDroid -> {
-                OsmdroidMapView()
+                OsmdroidMapView(
+                    focusCameraPosition = preferences.focusCameraPosition,
+                    darkMode = darkMode,
+                    onCameraMoving = onCameraMoving,
+                    onCameraChange = persistFocusCamera,
+                    overlays = overlays
+                )
             }
         }
+
+        //Render buttons
         MapButtons(
             modifier = Modifier.padding(horizontal = 10.dp), //Shift a little
-            onLocationButtonClick = {
+            locationButtonState = preferences.trackLocationState,
+            onHistoryButtonClick = {
 
+            },
+            onLocationButtonClick = {
+                preferences.trackLocationState = OnLocationState.ON_USER
             },
             onMapPreferencesClick = {
                 showMapPreferencesSheet = true

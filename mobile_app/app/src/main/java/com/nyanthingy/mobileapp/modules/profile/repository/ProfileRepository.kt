@@ -1,15 +1,12 @@
 package com.nyanthingy.mobileapp.modules.profile.repository
 
-import com.nyanthingy.mobileapp.modules.database.model.ProfileDao
-import com.nyanthingy.mobileapp.modules.database.model.ProfileEntry
-import javax.inject.Inject
+import com.nyanthingy.mobileapp.modules.profile.model.ProfileModel
+import kotlinx.coroutines.flow.Flow
 
-class ProfileRepository @Inject constructor(
-    private val _profileDao: ProfileDao
-) {
-    fun getAllProfiles() = _profileDao.getAll()
-
-    suspend fun insertProfile(profile: ProfileEntry) = _profileDao.insert(profile)
-    suspend fun updateProfile(profile: ProfileEntry) = _profileDao.update(profile)
-    suspend fun deleteProfile(profile: ProfileEntry) = _profileDao.delete(profile)
+interface ProfileRepository
+{
+    fun getAll(): Flow<List<ProfileModel>>
+    suspend fun insert(profile: ProfileModel)
+    suspend fun update(profile: ProfileModel)
+    suspend fun delete(profile: ProfileModel)
 }

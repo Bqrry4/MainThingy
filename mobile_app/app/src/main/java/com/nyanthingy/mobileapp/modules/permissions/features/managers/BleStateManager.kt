@@ -49,8 +49,6 @@ class BleStateManager @Inject constructor(
         //register the receiver for when the bluetooth adapter state change
         val bluetoothStateChangeReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
-                intent.action?.let { Log.println(Log.DEBUG, null, it) }
-                Log.println(Log.DEBUG, null, bluetoothAdapterState().toString())
                 trySend(
                     bluetoothAdapterState()
                 )

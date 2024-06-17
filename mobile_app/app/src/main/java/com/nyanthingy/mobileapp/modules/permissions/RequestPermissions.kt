@@ -18,7 +18,8 @@ import com.nyanthingy.mobileapp.modules.permissions.features.PermissionManager
 @Composable
 fun RequestPermissions(
     permissions: List<String>,
-    contentWhenRejected: @Composable () -> Unit = {}
+    contentWhenRejected: @Composable () -> Unit = {},
+    onPermissionChange: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
     val permissionState = rememberMultiplePermissionsState(permissions = permissions)
@@ -47,6 +48,9 @@ fun RequestPermissions(
         }
         contentWhenRejected()
     }
+
+    //notify about the permission state
+    onPermissionChange(permissionState.allPermissionsGranted)
 }
 
 

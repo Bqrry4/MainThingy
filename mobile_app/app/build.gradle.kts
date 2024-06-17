@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.ksp)
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     //kotlin("kapt")
+    id("kotlin-parcelize")
+
 }
 
 android {
@@ -53,6 +55,7 @@ android {
 
 dependencies {
 
+    //Jetpack Compose
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -60,6 +63,7 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.ui.util)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended.android)
     implementation(libs.androidx.navigation.compose)
@@ -93,6 +97,13 @@ dependencies {
 
     //Coil
     implementation(libs.coil.compose)
+
+    //Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.converter.scalars)
+
+    //Animation
+    runtimeOnly("androidx.compose.animation:animation:1.6.7")
 
     //Tests
     testImplementation(libs.junit)

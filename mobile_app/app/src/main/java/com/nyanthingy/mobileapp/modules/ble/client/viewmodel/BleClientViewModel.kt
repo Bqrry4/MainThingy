@@ -45,9 +45,8 @@ class BleClientViewModel @Inject constructor(
         rxCharacteristic = service.findCharacteristic(NyanThingySpecifications.UUID_RX_CHAR)!!
         txCharacteristic = service.findCharacteristic(NyanThingySpecifications.UUID_TX_CHAR)!!
 
-
-        //Observe rx characteristic
-        rxCharacteristic.getNotifications().onEach {
+        //Observe tx characteristic
+        txCharacteristic.getNotifications().onEach {
             //_state.value = _state.value.copy(isButtonPressed = BlinkyButtonParser.isButtonPressed(it))
             Log.println(Log.DEBUG, null, it.toString())
         }.launchIn(viewModelScope)

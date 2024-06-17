@@ -12,5 +12,4 @@ import dagger.hilt.android.components.ActivityRetainedComponent
 interface NavigationModule {
     @Binds
     fun bindNavigator(navigator: NavigationManager): Navigator
-
 }

@@ -28,7 +28,6 @@ class LocationStateManager @Inject constructor(
             Manifest.permission.ACCESS_COARSE_LOCATION
         )
     }
-
     fun stateFlow() = callbackFlow {
         //send the initial state
         trySend(
@@ -48,6 +47,7 @@ class LocationStateManager @Inject constructor(
             locationStateChangeReceiver,
             IntentFilter().apply {
                 addAction(LocationManager.MODE_CHANGED_ACTION)
+                addAction(PermissionManager.PERMISSIONS_REFRESH)
             },
             ContextCompat.RECEIVER_EXPORTED
         )

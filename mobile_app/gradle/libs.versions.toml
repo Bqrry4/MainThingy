@@ -1,6 +1,7 @@
 [versions]
 accompanistPermissionsVersion = "0.30.0"
 coilComposeVersion = "2.6.0"
+converterScalarsVersion = "2.9.0"
 kotlin = "1.9.0"
 hilt = "2.51.1"
 ksp = "1.9.20-1.0.14"
@@ -19,13 +20,15 @@ mapsKtx = "5.0.0"
 mapsUtilsKtx = "3.2.1"
 material = "1.6.7"
 navigationCompose = "2.7.7"
-osmdroidAndroid = "6.1.14"
+osmdroidAndroid = "6.1.18"
 playServicesLocation = "21.2.0"
 playServicesMaps = "18.2.0"
 preference = "1.2.1"
+retrofitVersion = "2.9.0"
 roomVersion = "2.6.0"
 secretsGradlePluginVersion = "2.0.1"
 lifecycleRuntimeCompose = "2.7.0"
+uiUtilVersion = "1.6.8"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -35,8 +38,10 @@ androidx-preference = { module = "androidx.preference:preference", version.ref =
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomVersion" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomVersion" }
+androidx-ui-util = { module = "androidx.compose.ui:ui-util", version.ref = "uiUtilVersion" }
 client = { module = "no.nordicsemi.android.kotlin.ble:client", version.ref = "advertiser" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilComposeVersion" }
+converter-scalars = { module = "com.squareup.retrofit2:converter-scalars", version.ref = "converterScalarsVersion" }
 google-accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissionsVersion" }
 google-secrets-gradle-plugin = { module = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin", version.ref = "secretsGradlePluginVersion" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
@@ -47,7 +52,7 @@ androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-co
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
-androidx-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-ui = { group = "androidx.compose.ui", name = "ui", version = "1.6.8" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
@@ -61,6 +66,7 @@ maps-utils-ktx = { module = "com.google.maps.android:maps-utils-ktx", version.re
 osmdroid-android = { module = "org.osmdroid:osmdroid-android", version.ref = "osmdroidAndroid" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofitVersion" }
 scanner = { module = "no.nordicsemi.android.kotlin.ble:scanner", version.ref = "advertiser" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
 

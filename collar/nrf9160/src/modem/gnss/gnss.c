@@ -5,7 +5,7 @@
 
 #include "../modem_config.h"
 #include "assistance/assistance.h"
-
+#include "gnss_fix_event.h"
 
 LOG_MODULE_REGISTER(gnss_module);
 
@@ -16,9 +16,6 @@ K_SEM_DEFINE(gnss_fix_sem, 0, 1);
 
 K_THREAD_STACK_DEFINE(gnss_workq_stack_area, GNSS_WORKQ_THREAD_STACK_SIZE);
 static struct k_work_q gnss_work_q;
-
-//::FIXME:
-#include <dk_buttons_and_leds.h>
 
 static struct nrf_modem_gnss_pvt_data_frame pvt_data;
 
@@ -79,12 +76,19 @@ int gnss_init()
         return err;
     }
 
-    // //FIXME: if assistance is disabled set to normal
-        err = nrf_modem_gnss_use_case_set(NRF_MODEM_GNSS_USE_CASE_MULTIPLE_HOT_START | NRF_MODEM_GNSS_USE_CASE_LOW_ACCURACY | NRF_MODEM_GNSS_USE_CASE_SCHED_DOWNLOAD_DISABLE);
-    if (err) {
-    	LOG_WRN("Failed to set GNSS use case %d", err);
-    }
+    // This use case flag should always be set.
+    uint8_t use_case = NRF_MODEM_GNSS_USE_CASE_MULTIPLE_HOT_START | NRF_MODEM_GNSS_USE_CASE_LOW_ACCURACY;
 
+	// Disable scheduled downloads when using assistance
+	if (IS_ENABLED(CONFIG_USE_ASSISTANCE)) {
+		use_case |= NRF_MODEM_GNSS_USE_CASE_SCHED_DOWNLOAD_DISABLE;
+	}
+
+    err = nrf_modem_gnss_use_case_set(use_case);
+    if (err)
+    {
+        LOG_WRN("Failed to set GNSS use case %d", err);
+    }
 
     err = nrf_modem_gnss_start();
     if (err)
@@ -99,16 +103,13 @@ int gnss_init()
         LOG_ERR("Failed to set GNSS dynamics mode, error: %d", err);
         return err;
     }
-    k_sleep(K_SECONDS(2));
 
-    // nrf_modem_gnss_stop();
-
-    // FIXME: need to fix about it
-    //  err = nrf_modem_gnss_prio_mode_enable();
-    //  if (err)
-    //  {
-    //      LOG_ERR("Error setting GNSS priority mode");
-    //  }
+    // Enable prio mode
+    err = nrf_modem_gnss_prio_mode_enable();
+    if (err)
+    {
+        LOG_ERR("Error setting GNSS priority mode");
+    }
 
     return 0;
 }
@@ -143,93 +144,47 @@ static void gnss_event_handler(int event_id)
 {
     int err;
 
-    LOG_INF("%d id", event_id);
-
     switch (event_id)
     {
     case NRF_MODEM_GNSS_EVT_PVT:
-        // FIXME: Repair the function
-        int num_satellites = 0;
-        for (int i = 0; i < 12; i++)
-        {
-            if (pvt_data.sv[i].signal != 0)
-            {
-                //LOG_INF("sv: %d, cn0: %d", pvt_data.sv[i].sv, pvt_data.sv[i].cn0);
-                num_satellites++;
-            }
-        }
 
-        //LOG_INF("Number of current satellites: %d", num_satellites);
-
-        if (nrf_modem_gnss_read(&pvt_data, sizeof(pvt_data), NRF_MODEM_GNSS_DATA_PVT))
+        err = nrf_modem_gnss_read(&pvt_data, sizeof(pvt_data), NRF_MODEM_GNSS_DATA_PVT);
+        if (err)
         {
             LOG_ERR("nrf_modem_gnss_read failed, err %d", err);
             return;
         }
 
-    LOG_INF("%d fags", pvt_data.flags);
-
-
         if (pvt_data.flags & NRF_MODEM_GNSS_PVT_FLAG_NOT_ENOUGH_WINDOW_TIME)
         {
-            //LOG_INF("GNSS blocked by LTE");
-
-            // err = k_work_submit(&lte_disable_work);
-            // if(err < 0)
-            // {
-            //     LOG_ERR("failed to submit lte_disable_work, err %d", err);
-            // }
+            LOG_DBG("GNSS blocked by LTE");
         }
 
         if (pvt_data.flags & NRF_MODEM_GNSS_PVT_FLAG_LEAP_SECOND_VALID)
         {
-            //LOG_INF("LEAP_SECOND_VALID");
+            LOG_DBG("LEAP_SECOND_VALID");
         }
 
-        //LOG_INF("flags %d", pvt_data.flags);
-
-        if (pvt_data.flags & NRF_MODEM_GNSS_PVT_FLAG_FIX_VALID)
-        {
-            dk_set_led_on(DK_LED1);
-            // dk_set_led_on(DK_LED1);
-            print_fix_data(&pvt_data);
-            /* STEP 12.3 - Print the time to first fix */
-            if (true)
-            {
-                // LOG_INF("Time to first fix: %2.1lld s", (k_uptime_get() - gnss_start_time) / 1000);
-            }
-            return;
-        }
         break;
     case NRF_MODEM_GNSS_EVT_PERIODIC_WAKEUP:
-        LOG_INF("GNSS has woken up");
-        dk_set_led_off(DK_LED2);
-        dk_set_led_off(DK_LED1);
-        dk_set_led_on(DK_LED3);
-
+        LOG_DBG("GNSS has woken up");
         break;
     case NRF_MODEM_GNSS_EVT_FIX:
-        LOG_INF("GNSS recieved a fix");
-        dk_set_led_on(DK_LED2);
-        dk_set_led_off(DK_LED3);
+        LOG_DBG("GNSS recieved a fix");
+
+        struct gnss_fix_event *event = new_gnss_fix_event();
+
+        event->pvt_data = pvt_data;
+        APP_EVENT_SUBMIT(event);
+
         break;
 
     case NRF_MODEM_GNSS_EVT_SLEEP_AFTER_TIMEOUT:
-        LOG_INF("GNSS sleep after timeout");
-        dk_set_led_on(DK_LED2);
-        dk_set_led_on(DK_LED1);
-        dk_set_led_on(DK_LED3);
-        dk_set_led_off(DK_LED3);
-
+        LOG_DBG("GNSS sleep after timeout");
         break;
 
-    // FIXME: bugged event
     case NRF_MODEM_GNSS_EVT_SLEEP_AFTER_FIX:
-        LOG_INF("GNSS sleep after FIX");
-        // dk_set_led_on(DK_LED3);
-        // dk_set_led_off(DK_LED1);
-        // k_sem_give(&gnss_fix_sem);
-
+        LOG_DBG("GNSS sleep after FIX");
         break;
 
 #if defined(CONFIG_USE_ASSISTANCE)
@@ -288,24 +243,11 @@ static void agnss_req_work_fn(struct k_work *item)
         LOG_ERR("Failed to request assistance data");
     }
 
-    //Enabling gnss prio mode when needing additional data, which will be disabled after getting the fix
+    // Enabling gnss prio mode when needing additional data, which will be disabled after getting the fix
     err = nrf_modem_gnss_prio_mode_enable();
     if (err)
     {
         LOG_ERR("Error setting GNSS priority mode");
     }
     deactivate_lte();
-}
-
-//FIXME: needed only for debug
-static void print_fix_data(struct nrf_modem_gnss_pvt_data_frame *pvt_data)
-{
-    LOG_INF("Latitude:       %.06f", pvt_data->latitude);
-    LOG_INF("Longitude:      %.06f", pvt_data->longitude);
-    LOG_INF("Altitude:       %.01f m", pvt_data->altitude);
-    LOG_INF("Time (UTC):     %02u:%02u:%02u.%03u",
-            pvt_data->datetime.hour,
-            pvt_data->datetime.minute,
-            pvt_data->datetime.seconds,
-            pvt_data->datetime.ms);
 }

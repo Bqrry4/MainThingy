@@ -207,9 +207,6 @@ static void wait_for_buf_work_handler(struct k_work *work)
 // 	}
 // }
 
-#define STACKSIZE 1024
-#define PRIORITY 7
-
 void retransmit_tx_thread(void)
 {
 	while (true)
@@ -238,5 +235,5 @@ void retransmit_tx_thread(void)
 	}
 }
 
-K_THREAD_DEFINE(retransmit_tx_thread_id, STACKSIZE, retransmit_tx_thread, NULL, NULL,
-				NULL, PRIORITY, 0, 0);
+K_THREAD_DEFINE(retransmit_tx_thread_id, CONFIG_UART_THREAD_STACK_SIZE, retransmit_tx_thread, NULL, NULL,
+				NULL, CONFIG_UART_THREAD_PRIORITY, 0, 0);

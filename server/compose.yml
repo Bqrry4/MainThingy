@@ -1,0 +1,46 @@
+services:
+  mariadb-nyan:
+    image: mariadb:latest
+    ports:
+      - "53306:3306"
+    expose:
+      - "53306"
+    volumes:
+      - ./config/init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: nyan
+      MYSQL_USER: user
+      MYSQL_PASSWORD: pass
+      TZ: Europe/Bucharest
+    networks:
+      - intern
+
+  http-service:
+    build:
+      context: ./httpServer/
+      dockerfile: Dockerfile
+    container_name: nyanHttp
+    ports:
+      - "8080:8080"
+    expose:
+      - "8080"
+    networks:
+      - intern
+    depends_on:
+      - mariadb-nyan
+    restart: on-failure:10
+
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ./config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./config/definitions.json:/etc/rabbitmq/definitions.json:ro
+    networks:
+      - intern
+
+networks:
+  intern:

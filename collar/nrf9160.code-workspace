@@ -28,7 +28,16 @@
 			"battery_monitor.h": "c",
 			"array": "c",
 			"string": "c",
-			"string_view": "c"
+			"string_view": "c",
+			"app_event_manager_profiler_tracer.h": "c",
+			"nrf_modem_gnss.h": "c",
+			"modem_config.h": "c",
+			"random.h": "c",
+			"gnss_fix_event.h": "c",
+			"server_exchange.h": "c",
+			"algorithm": "c",
+			"ostream": "c",
+			"utility": "c"
 		},
 		"nrf-connect.boardRoots": [
 			"${workspaceFolder:nrf52840}\\board\\"

@@ -100,7 +100,9 @@ dependencies {
 
     //Retrofit
     implementation(libs.retrofit)
-    implementation(libs.converter.scalars)
+    implementation(libs.retrofit.converter.kotlinx.serialization)
+    //add kotlinx-serialization
+    implementation(libs.kotlinx.serialization.json)
 
     //Animation
     runtimeOnly("androidx.compose.animation:animation:1.6.7")

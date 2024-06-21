@@ -21,7 +21,15 @@ config FIFO_TX_RETRANSMISSION_DELAY
 	default 100
 	help
 	 In milisec
-	
+
+config UART_THREAD_STACK_SIZE
+	int "Stack size for the uart tx thread"
+	default 1024
+
+config UART_THREAD_PRIORITY
+	int "Priority of the uart tx thread"
+	default 7
+
 
 endmenu
 

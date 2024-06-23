@@ -1,0 +1,19 @@
+
+menuconfig ENABLE_BUZZER
+	bool "Enable buzzer"
+	select PWM
+	help
+	  Buzzer with pwm
+
+if ENABLE_BUZZER
+
+config BUZZER_THREAD_STACK_SIZE
+	int "Stack size for buzzer thread"
+	default 1024
+
+endif #ENABLE_BUZZER
+
+
+module = BUZZER
+module-str = buzzer
+source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"

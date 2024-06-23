@@ -21,7 +21,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddLink
 import androidx.compose.material.icons.filled.NetworkCell
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -45,6 +47,7 @@ import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.nyanthingy.mobileapp.R
+import com.nyanthingy.mobileapp.modules.ble.client.viewmodel.BleViewModel
 import com.nyanthingy.mobileapp.modules.commons.view.DraggableDropDown
 import com.nyanthingy.mobileapp.modules.database.profile.model.ProfileEntry
 import com.nyanthingy.mobileapp.modules.profile.model.ProfileModel
@@ -59,6 +62,26 @@ fun ProfileListView(
 ) {
     val viewModel = hiltViewModel<ProfileViewModel>()
     val navigation = hiltViewModel<NavigationViewModel>()
+
+
+    //FIXME:
+    val ble = hiltViewModel<BleViewModel>()
+    Box(
+        contentAlignment = Alignment.BottomStart,
+        modifier = Modifier.zIndex(3f)
+    ){
+        Button(onClick = {
+            ble.setBuzzerState(
+                profiles[
+                    viewModel.selectedProfile
+                ].macAddress!!,
+                true
+            )
+        }) {
+        }
+    }
+
+
 
     var dropDownItems: List<@Composable () -> Unit> = profiles.map {
         {

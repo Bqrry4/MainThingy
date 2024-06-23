@@ -18,4 +18,6 @@ interface ProfileDao {
     suspend fun delete(profileEntry: ProfileEntry)
     @Query("SELECT * from profiles")
     fun getAll(): Flow<List<ProfileEntry>>
+    @Query("SELECT macAddress from profiles")
+    fun getMacAddresses() : Flow<List<String?>>
 }

@@ -23,7 +23,7 @@ struct device *lpuart = DEVICE_DT_GET(DT_NODELABEL(lpuart));
 static struct k_work_delayable wait_for_buf_work;
 static void wait_for_buf_work_handler(struct k_work *work);
 
-int uart_init()
+int uart_channel_init()
 {
 	int err;
 
@@ -123,6 +123,7 @@ static void uart_event_handler(const struct device *dev, struct uart_event *evt,
 		}
 		else
 		{
+			//buffer empty
 			k_free(buf);
 		}
 		break;
@@ -219,18 +220,21 @@ void retransmit_tx_thread(void)
 		{
 			// try to send
 			err = uart_tx(lpuart, buf->data, buf->len, SYS_FOREVER_MS);
-			if (err == -EBUSY)
+			if (err)
 			{
-				LOG_WRN("Ongoing transfer, trying again");
-				k_msleep(CONFIG_FIFO_TX_RETRANSMISSION_DELAY);
-			}
-			else
-			{
-				LOG_ERR("Failed to send data to uart with %d", err);
+				if (err == -EBUSY)
+				{
+					LOG_WRN("Ongoing transfer, trying again");
+					k_msleep(CONFIG_FIFO_TX_RETRANSMISSION_DELAY);
+				}
+				else
+				{
+					LOG_ERR("Failed to send data to uart with %d", err);
+				}
 			}
 		} while (err);
 
-		//free the buffer from FIFO
+		// free the buffer from FIFO
 		k_free(buf);
 	}
 }

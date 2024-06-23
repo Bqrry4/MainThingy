@@ -1,9 +1,11 @@
 package com.nyanthingy.mobileapp.modules.profile.view
 
+import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.nyanthingy.mobileapp.modules.ble.client.viewmodel.BleViewModel
 import com.nyanthingy.mobileapp.modules.permissions.RequireStorageRead
 import com.nyanthingy.mobileapp.modules.profile.viewmodel.ProfileViewModel
 
@@ -13,12 +15,9 @@ fun ProfileView() {
     val viewModel = hiltViewModel<ProfileViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    if (state.profileModelList.isEmpty())
-    {
+    if (state.profileModelList.isEmpty()) {
         NoProfileView()
-    }
-    else
-    {
+    } else {
         RequireStorageRead {
             ProfileListView(state.profileModelList)
         }

@@ -14,7 +14,9 @@ zephyr_library_include_directories(
   src/modem
   src/uart_channel
   src/server_exchange
-  src/battery_monitor
+  src/modules
+  src/watchdog
+  src/uart_resolver
   )
 
 # App sources
@@ -22,4 +24,6 @@ add_subdirectory(src/events)
 add_subdirectory(src/modem)
 add_subdirectory(src/uart_channel)
 add_subdirectory(src/server_exchange)
-add_subdirectory(src/battery_monitor)
+add_subdirectory(src/modules)
+add_subdirectory(src/uart_resolver)
+add_subdirectory_ifdef(CONFIG_ENABLE_WATCHDOG src/watchdog)

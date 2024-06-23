@@ -107,6 +107,9 @@ dependencies {
     //Animation
     runtimeOnly("androidx.compose.animation:animation:1.6.7")
 
+    // WorkManager dependency
+    implementation("androidx.work:work-runtime-ktx:2.8.1")
+
     //Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

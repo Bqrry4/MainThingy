@@ -8,5 +8,4 @@ import javax.inject.Inject
 class BleClientManager @Inject constructor(
 ) {
     val connectedDevices = mutableMapOf<String, ClientBleGatt>()
-
 }

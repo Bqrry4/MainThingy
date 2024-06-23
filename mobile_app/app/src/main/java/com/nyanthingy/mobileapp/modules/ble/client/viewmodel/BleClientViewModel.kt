@@ -28,6 +28,11 @@ class BleClientViewModel @Inject constructor(
     private val _bleManager: BleClientManager
 ) : ViewModel() {
 
+    init{
+        //repos, try to connect
+    }
+
+
     private val _devices = MutableStateFlow(listOf<ClientBleGatt>())
     val devices = _devices.asStateFlow()
 
@@ -37,6 +42,9 @@ class BleClientViewModel @Inject constructor(
             .also {
                 _bleManager.connectedDevices[macAddress] = it
             }
+
+
+        client.discoverServices()
 
         //Discover services on the Bluetooth LE Device.
         val services = client.discoverServices()
@@ -56,12 +64,5 @@ class BleClientViewModel @Inject constructor(
 
     private lateinit var rxCharacteristic: ClientBleGattCharacteristic
     private lateinit var txCharacteristic: ClientBleGattCharacteristic
-    private suspend fun configureGatt(services: ClientBleGattServices) {
-
-
-//        //Check the initial state of the Led.
-//        val isLedOn = BlinkyLedParser.isLedOn(ledCharacteristic.read())
-//        _state.value = _state.value.copy(isLedOn = isLedOn)
-    }
 
 }

@@ -1,5 +1,11 @@
 menu "MainThingy Settings"
 
+config DEVICE_IDENTIFIER
+	string "The device identifier"
+	default "FF:EE:DD:CC:BB:AA"
+	help
+		Use the mac adress for now
+
 config USE_ASSISTANCE
 	bool "Use assistance module"
 
@@ -19,6 +25,9 @@ config USE_ASSISTANCE_PGPS
 	rsource "src/modem/Kconfig"
 	rsource "src/server_exchange/Kconfig"
 	rsource "src/uart_channel/Kconfig"
+	rsource "src/modules/buzzer/Kconfig"
+	rsource "src/watchdog/Kconfig"
+	rsource "src/uart_resolver/Kconfig"
 endmenu
 
 

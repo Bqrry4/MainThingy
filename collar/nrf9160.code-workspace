@@ -37,7 +37,19 @@
 			"server_exchange.h": "c",
 			"algorithm": "c",
 			"ostream": "c",
-			"utility": "c"
+			"utility": "c",
+			"socket.h": "c",
+			"coap.h": "c",
+			"stdbool.h": "c",
+			"pwm.h": "c",
+			"device.h": "c",
+			"app_event_manager.h": "c",
+			"led.h": "c",
+			"settings.h": "c",
+			"syscall.h": "c",
+			"led_state_event.h": "c",
+			"buzzer_state_event.h": "c",
+			"buzzer.h": "c"
 		},
 		"nrf-connect.boardRoots": [
 			"${workspaceFolder:nrf52840}\\board\\"

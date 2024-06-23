@@ -115,42 +115,6 @@ fun MapsView() {
                     }
                 }
 
-
-//                    listOf(
-//                    {
-//                        var editMode by remember {
-//                            mutableStateOf(false)
-//                        }
-//                        var position by remember {
-//                            mutableStateOf(GeoPosition(47.154005998392535, 27.593949871427842))
-//                        }
-//
-//                        var radius by remember {
-//                            mutableDoubleStateOf(150.0)
-//                        }
-//                        CircleOverlay(
-//                            center = position,
-//                            radius = radius,
-//                            projection = it,
-//                            editMode = editMode,
-//                            onEditModeChange = { editModeValue ->
-//                                editMode = editModeValue
-//                            },
-//                            onModified = { geoPosition, geoRadius ->
-//                                position = geoPosition
-//                                radius = geoRadius
-//                            }
-//                        )
-//                    },
-//                    {
-//                        CircleOverlay(
-//                            center = GeoPosition(47.157639582381286, 27.604728770613246),
-//                            radius = 100.0,
-//                            projection = it
-//                        )
-//                    },
-//                )
-
                 false -> null
             }
 

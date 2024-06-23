@@ -117,10 +117,9 @@ class NyanThingyCoapServer : CoapServer() {
             val message = String(delivery.body, charset("UTF-8"))
             println(" [x] Received '$message'")
 
-            (this.root.getChild("") as CoapResource).changed()
+//            (this.root.getChild("") as CoapResource).changed()
         }
         RabbitMQConfig.registerConsumerCallback(channel, deliverCallback)
-
     }
 
 }

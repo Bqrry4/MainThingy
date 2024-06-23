@@ -2,8 +2,10 @@ package com.nyanthingy.mobileapp.config.hilt
 
 import android.content.Context
 import androidx.room.Room
+import com.nyanthingy.mobileapp.modules.ble.client.repository.DevicesRepository
 import com.nyanthingy.mobileapp.modules.database.AppDatabase
 import com.nyanthingy.mobileapp.modules.database.profile.model.ProfileDao
+import com.nyanthingy.mobileapp.modules.database.profile.repository.DevicesRepositoryDB
 import com.nyanthingy.mobileapp.modules.database.profile.repository.ProfileRepositoryDB
 import com.nyanthingy.mobileapp.modules.database.virtualfence.model.VirtualFenceDao
 import com.nyanthingy.mobileapp.modules.database.virtualfence.repository.VirtualFenceRepositoryDB
@@ -54,4 +56,9 @@ interface DatabaseModule {
     fun bindVirtualFenceRepository(
         virtualFenceRepositoryDB: VirtualFenceRepositoryDB
     ): VirtualFenceRepository
+
+    @Binds
+    fun bindDevicesRepository(
+        devicesRepositoryDB: DevicesRepositoryDB
+    ): DevicesRepository
 }

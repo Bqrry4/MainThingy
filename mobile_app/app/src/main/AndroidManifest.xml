@@ -35,6 +35,9 @@
 <!-- Notifications -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
+<!-- Services -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+
     <application
         android:name=".NyanThingyApp"
         android:allowBackup="true"
@@ -61,6 +64,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+
+        <service
+            android:name=".modules.ble.client.service.BleService"
+            android:foregroundServiceType="connectedDevice" />
     </application>
 
 </manifest>

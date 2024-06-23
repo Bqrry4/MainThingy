@@ -75,10 +75,6 @@ fun CircleOverlay(
         )
     }
 
-    println(circleCenter.toString())
-    println(circleRadius.toString())
-    println(center)
-
     Canvas(
         modifier = Modifier
             .fillMaxSize()

@@ -12,6 +12,10 @@ config COAP_OVER_DTLS
 	bool "Use Coap over DTLS"
 	select MODEM_KEY_MGMT
 
+config COAP_APP_VERSION
+	int "Version of the protocol"
+	default 1
+
 #Setting for when COAP_OVER_DTLS is enabled
 config SOCK_SEC_TAG
 	int "The sec_tag for the socket, which will connect to the server"

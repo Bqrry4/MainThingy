@@ -14,18 +14,15 @@
 
 LOG_MODULE_REGISTER(server_exchange);
 
-#define APP_COAP_VERSION 1
-
 static int sock;
 static struct pollfd fds;
 static struct sockaddr_storage server;
 
-static uint16_t token;
 static uint8_t coap_send_buf[1024];
 static uint8_t coap_recv_buf[1024];
 
 /* Function for listen for responses thread */
-void listen_for_responses_thread(void);
+void listen_for_responses_thread(void *, void *, void *);
 K_THREAD_STACK_DEFINE(listen_for_responses_thread_stack_area, CONFIG_RESPONSE_THREAD_STACK_SIZE);
 struct k_thread listen_for_responses_thread_id;
 
@@ -143,9 +140,6 @@ int server_exchange_init()
         LOG_ERR("Connect failed : %d\n", errno);
         return -errno;
     }
-
-    // Randomize token.
-    token = sys_rand32_get();
 
     // init fds
     fds.fd = sock;
@@ -287,12 +281,10 @@ static int client_handle_response(uint8_t *buf, int len)
     // printk("CoAP response: code: 0x%x, token 0x%02x%02x, payload: %s\n",
     //        coap_header_get_code(&response), token[1], token[0], temp_buf);
 
-    
-
     return 0;
 }
 
-void listen_for_responses_thread(void)
+void listen_for_responses_thread(void *, void *, void *)
 {
     int err;
     int bytes;
@@ -345,119 +337,40 @@ void listen_for_responses_thread(void)
 
 /* ---- Requests ---- */
 
-int send_gps_data(void)
+int send_observe_led()
 {
     int err;
 
     struct coap_packet request;
-    uint8_t payload[128] = {0};
-
-    ZCBOR_STATE_E(encoding_state, 0, payload, sizeof(payload), 0);
-    err = zcbor_map_start_encode(encoding_state, 0) &&
-          zcbor_tstr_put_lit(encoding_state, "lon") &&
-          zcbor_float64_put(encoding_state, 2.2) &&
-          zcbor_tstr_put_lit(encoding_state, "lat") &&
-          zcbor_float64_put(encoding_state, 2.3) &&
-          zcbor_tstr_put_lit(encoding_state, "acr") &&
-          zcbor_float32_put(encoding_state, 2.4) &&
-          zcbor_map_end_encode(encoding_state, 0);
-    if (!err)
-    {
-        err = zcbor_peek_error(encoding_state);
-        LOG_ERR("Encoding failed: %d", err);
-        return -err;
-    }
-
-    // As the pointer in encoding state is incrementing a it goes, we can find the size of the final encoded content as follows
-    int payload_len = encoding_state->payload - payload;
-    // If this will fail in future releases of the zcbor library, try with strlen and send the size of buffer - 1, or check for a function
-
-    token++;
+    uint8_t *token = coap_next_token();
 
     err = coap_packet_init(&request, coap_send_buf, sizeof(coap_send_buf),
-                           APP_COAP_VERSION, COAP_TYPE_NON_CON,
-                           sizeof(token), (uint8_t *)&token,
-                           COAP_METHOD_POST, coap_next_id());
+                           CONFIG_COAP_APP_VERSION, COAP_TYPE_NON_CON,
+                           COAP_TOKEN_MAX_LEN, token,
+                           COAP_METHOD_GET, coap_next_id());
     if (err < 0)
     {
-        LOG_ERR("Failed to create CoAP request, %d", err);
+        printk("Failed to create CoAP request, %d\n", err);
         return err;
     }
 
-    err = coap_packet_append_option(&request, COAP_OPTION_URI_PATH,
-                                    (uint8_t *)"loc", 3);
+    // err = coap_packet_append_option(&request, COAP_OPTION_URI_PATH,
+    // 					(uint8_t *)CONFIG_COAP_RESOURCE,
+    // 					strlen(CONFIG_COAP_RESOURCE));
     if (err < 0)
     {
-        LOG_ERR("Failed to encode CoAP path option, %d", err);
+        printk("Failed to encode CoAP option, %d\n", err);
         return err;
     }
 
-    err = coap_packet_append_option(&request, COAP_OPTION_CONTENT_FORMAT,
-					(uint8_t *)COAP_CONTENT_FORMAT_APP_CBOR,
-					strlen(COAP_CONTENT_FORMAT_APP_CBOR));
-	if (err < 0) {
-		printk("Failed to encode CoAP option, %d\n", err);
-		return err;
-	}
-
-    err = coap_packet_append_payload_marker(&request);
+    // err = coap_packet_append_option(&request, COAP_OPTION_OBSERVE,
+    // 					(uint8_t *)CONFIG_COAP_RESOURCE,
+    // 					strlen(CONFIG_COAP_RESOURCE));
     if (err < 0)
     {
-        LOG_ERR("Failed to append the payload marker, %d", err);
+        printk("Failed to encode CoAP option, %d\n", err);
         return err;
     }
-
-    err = coap_packet_append_payload(&request, (uint8_t *)payload,
-                                     payload_len);
-    if (err)
-    {
-        LOG_ERR("Failed to add the payload, %d", err);
-        return err;
-    }
-
-    err = send(sock, request.data, request.offset, 0);
-    if (err < 0)
-    {
-        LOG_ERR("Failed to send CoAP request, %d, %d", errno, err);
-        return -errno;
-    }
-
-    LOG_INF("CoAP request sent to /loc resource: token 0x%04x, bytes sent: %d", token, err);
 
     return 0;
-}
-
-int send_observe_led()
-{
-	int err;
-
-	struct coap_packet request;
-    token++;
-
-	err = coap_packet_init(&request, coap_send_buf, sizeof(coap_send_buf),
-			       APP_COAP_VERSION, COAP_TYPE_NON_CON,
-			       sizeof(next_token), (uint8_t *)&next_token,
-			       COAP_METHOD_GET, coap_next_id());
-	if (err < 0) {
-		printk("Failed to create CoAP request, %d\n", err);
-		return err;
-	}
-
-err = coap_packet_append_option(&request, COAP_OPTION_URI_PATH,
-					(uint8_t *)CONFIG_COAP_RESOURCE,
-					strlen(CONFIG_COAP_RESOURCE));
-	if (err < 0) {
-		printk("Failed to encode CoAP option, %d\n", err);
-		return err;
-	}
-
-err = coap_packet_append_option(&request, COAP_OPTION_OBSERVE,
-					(uint8_t *)CONFIG_COAP_RESOURCE,
-					strlen(CONFIG_COAP_RESOURCE));
-	if (err < 0) {
-		printk("Failed to encode CoAP option, %d\n", err);
-		return err;
-	}
-
-
 }

@@ -1,0 +1,38 @@
+menu "Lpuart settings"
+
+config UART_BUFFER_SIZE
+	int "UART payload buffer element size"
+	default 64
+
+config UART_RECEIVE_TIMEOUT
+	int "Inactivity period after receiving at least a byte which triggers #UART_RX_RDY event"
+	default 100
+	help
+	 In milisec
+
+config UART_WAIT_FOR_BUFFER_DELAY
+	int "The delay between the tries to allocate the rx buffer when malloc fails"
+	default 50
+	help
+	 In milisec
+
+config FIFO_TX_RETRANSMISSION_DELAY
+	int "The delay between the tries to send the tx buffer when there is already an ongoing transfer"
+	default 100
+	help
+	 In milisec
+
+config UART_THREAD_STACK_SIZE
+	int "Stack size for the uart tx thread"
+	default 1024
+
+config UART_THREAD_PRIORITY
+	int "Priority of the uart tx thread"
+	default 7
+
+
+endmenu
+
+module = LPUART
+module-str = Lpuart
+source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"

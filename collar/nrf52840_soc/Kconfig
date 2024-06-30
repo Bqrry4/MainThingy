@@ -1,0 +1,15 @@
+#
+# Copyright (c) 2020 Nordic Semiconductor ASA
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+menu "Nyanthingy nrf52480"
+    rsource "src/uart_channel/Kconfig"
+    rsource "src/ble_gatt/Kconfig"
+    rsource "src/watchdog/Kconfig"
+endmenu
+
+menu "Zephyr Kernel"
+source "Kconfig.zephyr"
+endmenu

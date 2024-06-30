@@ -1,0 +1,16 @@
+
+menuconfig ENABLE_WATCHDOG
+	bool "Enable watchdog"
+	select WATCHDOG
+
+if ENABLE_WATCHDOG
+
+config WATCHDOG_TIMEOUT
+	int "Watchdog timeout in seconds"
+	default 60
+
+endif #ENABLE_WATCHDOG
+
+module = WATCHDOG
+module-str = watchdog
+source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"

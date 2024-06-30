@@ -1,4 +1,4 @@
-package app.dto
+package com.nyanthingy.app.dto
 
 data class GeoEntryDTO(
     /*longitude*/

@@ -1,8 +1,8 @@
-package app
+package com.nyanthingy.app
 
-import app.config.RabbitMQConfig
-import app.persistance.repository.implementations.DeviceRepositoryImpl
-import app.persistance.repository.implementations.GSPointRepositoryImpl
+import com.nyanthingy.app.config.RabbitMQConfig
+import com.nyanthingy.app.persistance.repository.implementations.DeviceRepositoryImpl
+import com.nyanthingy.app.persistance.repository.implementations.GSPointRepositoryImpl
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.cbor.databind.CBORMapper
 

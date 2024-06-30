@@ -1,7 +1,7 @@
-package app.persistance.repository.implementations
+package com.nyanthingy.app.persistance.repository.implementations
 
-import app.persistance.model.Device
-import app.persistance.repository.interfaces.DeviceRepository
+import com.nyanthingy.app.persistance.model.Device
+import com.nyanthingy.app.persistance.repository.interfaces.DeviceRepository
 
 class DeviceRepositoryImpl : DeviceRepository,
     JpaRepository<Device, Int>(Device::class.java) {

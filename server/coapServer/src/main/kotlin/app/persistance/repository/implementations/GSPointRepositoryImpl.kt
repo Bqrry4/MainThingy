@@ -1,7 +1,7 @@
-package app.persistance.repository.implementations
+package com.nyanthingy.app.persistance.repository.implementations
 
-import app.persistance.model.GSPoint
-import app.persistance.repository.interfaces.GSPointRepository
+import com.nyanthingy.app.persistance.model.GSPoint
+import com.nyanthingy.app.persistance.repository.interfaces.GSPointRepository
 import java.util.*
 
 class GSPointRepositoryImpl : GSPointRepository,

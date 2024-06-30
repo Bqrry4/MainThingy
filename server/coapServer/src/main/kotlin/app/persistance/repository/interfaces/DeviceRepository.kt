@@ -1,6 +1,6 @@
-package app.persistance.repository.interfaces
+package com.nyanthingy.app.persistance.repository.interfaces
 
-import app.persistance.model.Device
+import com.nyanthingy.app.persistance.model.Device
 
 interface DeviceRepository : Repository<Device, Int>{
 

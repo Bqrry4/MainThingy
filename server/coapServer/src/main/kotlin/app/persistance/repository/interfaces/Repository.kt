@@ -1,4 +1,4 @@
-package app.persistance.repository.interfaces
+package com.nyanthingy.app.persistance.repository.interfaces
 
 
 /**

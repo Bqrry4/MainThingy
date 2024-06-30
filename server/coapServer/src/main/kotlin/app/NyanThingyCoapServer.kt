@@ -1,8 +1,8 @@
-package app
+package com.nyanthingy.app
 
-import app.config.RabbitMQConfig
-import app.deliverer.CustomMessageDeliverer
-import app.cresources.*
+import com.nyanthingy.app.config.RabbitMQConfig
+import com.nyanthingy.app.deliverer.CustomMessageDeliverer
+import com.nyanthingy.app.cresources.*
 import com.rabbitmq.client.DeliverCallback
 import com.rabbitmq.client.Delivery
 import org.eclipse.californium.core.CoapResource
@@ -25,7 +25,7 @@ class NyanThingyCoapServer : CoapServer() {
 
         //private const val SERVER_HOSTNAME = "0.0.0.0"
         //hardcoded for the localtonet
-        private const val SERVER_HOSTNAME = "127.0.0.1"
+        private const val SERVER_HOSTNAME = "localhost"
 
         //reading values from californium3.properties
         private val SERVER_PORT = Configuration.getStandard().get(CoapConfig.COAP_PORT)
@@ -111,15 +111,15 @@ class NyanThingyCoapServer : CoapServer() {
         )
         messageDeliverer = CustomMessageDeliverer(this.root, config)
 
-        //configure the consumer queue
-        val channel = RabbitMQConfig.createConnection()
-        val deliverCallback = DeliverCallback { _: String?, delivery: Delivery ->
-            val message = String(delivery.body, charset("UTF-8"))
-            println(" [x] Received '$message'")
-
-//            (this.root.getChild("") as CoapResource).changed()
-        }
-        RabbitMQConfig.registerConsumerCallback(channel, deliverCallback)
+//        //configure the consumer queue
+//        val channel = RabbitMQConfig.createConnection()
+//        val deliverCallback = DeliverCallback { _: String?, delivery: Delivery ->
+//            val message = String(delivery.body, charset("UTF-8"))
+//            println(" [x] Received '$message'")
+//
+////            (this.root.getChild("") as CoapResource).changed()
+//        }
+//        RabbitMQConfig.registerConsumerCallback(channel, deliverCallback)
     }
 
 }

@@ -1,31 +1,79 @@
-package app.cresources
+package com.nyanthingy.app.cresources
 
+import com.fasterxml.jackson.core.exc.StreamReadException
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
+import com.nyanthingy.app.AppContainer
+import com.nyanthingy.app.dto.GeoEntryDTO
+import com.nyanthingy.app.dto.StateDto
 import org.eclipse.californium.core.CoapResource
 import org.eclipse.californium.core.coap.CoAP.ResponseCode
 import org.eclipse.californium.core.coap.CoAP.Type
 import org.eclipse.californium.core.observe.ObserveRelation
 import org.eclipse.californium.core.server.resources.CoapExchange
+import java.nio.charset.StandardCharsets
 
-class LedResource : CoapResource("led"){
+
+class LedResource : CoapResource("led") {
     init {
         isObservable = true;
         observeType = Type.CON;
         attributes.setObservable();
     }
 
-    override fun addObserveRelation(relation: ObserveRelation?) {
-        super.addObserveRelation(relation)
-    }
+    private val _mapper = AppContainer.mapper
+
+    //the state does not have to persist
+    private var state: Boolean? = null
+
+    //Only one device could observe its own resource
+//    override fun addObserveRelation(relation: ObserveRelation) {
+////        this.clearObserveRelations()
+//        super.addObserveRelation(relation)
+//    }
 
     override fun handleGET(exchange: CoapExchange) {
-//        exchange.respond("update")
-        val deviceId = parent.name
-        exchange.respond("LED Resource Observed by: ${this.observerCount}")
+        //for observe purpose
+        when (state) {
+            null -> {
+                exchange.respond(
+                    ResponseCode.VALID
+                )
+            }
 
+            else -> {
+                exchange.respond(
+                    ResponseCode.CONTENT,
+                    _mapper.writeValueAsBytes(
+                        StateDto(
+                            st = state!!
+                        )
+                    )
+                )
+            }
+        }
     }
 
     override fun handlePUT(exchange: CoapExchange) {
+
+        runCatching {
+           val dto = _mapper.reader().readValue(
+                exchange.requestPayload,
+                StateDto::class.java
+            )
+            state = dto.st
+
+        }.onFailure {
+            println(it.toString())
+            when (it) {
+                is StreamReadException,
+                is UnrecognizedPropertyException -> exchange.respond(ResponseCode.BAD_REQUEST)
+
+                else -> exchange.respond(ResponseCode.INTERNAL_SERVER_ERROR)
+            }
+        }
+        println("ASSSSSSSSS")
+        changed()
         exchange.respond(ResponseCode.CHANGED)
-        changed() // notify all observers
     }
+
 }

@@ -49,7 +49,9 @@
 			"syscall.h": "c",
 			"led_state_event.h": "c",
 			"buzzer_state_event.h": "c",
-			"buzzer.h": "c"
+			"buzzer.h": "c",
+			"hci.h": "c",
+			"imu_classifier.h": "c"
 		},
 		"nrf-connect.boardRoots": [
 			"${workspaceFolder:nrf52840}\\board\\"

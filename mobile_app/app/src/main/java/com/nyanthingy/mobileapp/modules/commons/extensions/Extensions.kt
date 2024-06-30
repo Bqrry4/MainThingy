@@ -23,6 +23,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.scan
 import kotlin.math.hypot
 
 
@@ -32,12 +37,43 @@ import kotlin.math.hypot
 @Composable
 fun Float.pxToDp() = with(LocalDensity.current) { this@pxToDp.toDp() }
 
+
+/**
+ * Consume values in chunks of chunkSize
+ */
+fun <T> Flow<T>.chunked(chunkSize: Int): Flow<List<T>> {
+    val buffer = ArrayList<T>(chunkSize)
+    return flow {
+        this@chunked.collect {
+            buffer.add(it)
+            if (buffer.size == chunkSize) {
+                emit(buffer.toList())
+                buffer.clear()
+            }
+        }
+        if (buffer.isNotEmpty()) {
+            emit(buffer.toList())
+        }
+    }
+}
+
+/**
+ * Simulates the Iterable.windowed
+ */
+fun <T> Flow<T>.windowed(size: Int): Flow<List<T>> {
+    return this
+        .scan(emptyList<T>()) { acc, value ->
+            (acc + value).takeLast(size)
+        }
+        //To have complete windows
+        .filter { it.size == size }
+}
+
 /**
  * Clears the local focus on region tap
  */
 @Composable
-fun Modifier.clearFocusOnTap(): Modifier
-{
+fun Modifier.clearFocusOnTap(): Modifier {
     val focusManager = LocalFocusManager.current
     return this.pointerInput(Unit) {
         awaitEachGesture {
@@ -73,8 +109,7 @@ fun Modifier.ignoreParentPadding(horizontal: Dp = 0.dp, vertical: Dp = 0.dp): Mo
 /**
  * Shortcut for a dashed border
  */
-fun Modifier.dashedBorder(strokeWidth: Dp, color: Color, cornerRadiusDp: Dp): Modifier
-{
+fun Modifier.dashedBorder(strokeWidth: Dp, color: Color, cornerRadiusDp: Dp): Modifier {
     return this.drawWithCache {
         onDrawBehind {
             val stroke = Stroke(
@@ -132,7 +167,12 @@ suspend fun PointerInputScope.detectZoomGesture(onZoom: (Float) -> Unit) {
             val event = awaitPointerEvent()
             val pointers = event.changes.filter { it.pressed }
             if (pointers.size == 2) {
-                val currentDistance = calculateDistance(pointers[0].position.x, pointers[0].position.y, pointers[1].position.x, pointers[1].position.y)
+                val currentDistance = calculateDistance(
+                    pointers[0].position.x,
+                    pointers[0].position.y,
+                    pointers[1].position.x,
+                    pointers[1].position.y
+                )
                 if (initialDistance == null) {
                     initialDistance = currentDistance
                 } else {

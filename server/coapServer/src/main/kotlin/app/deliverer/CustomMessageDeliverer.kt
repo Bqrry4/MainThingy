@@ -1,4 +1,4 @@
-package app.deliverer
+package com.nyanthingy.app.deliverer
 
 import org.eclipse.californium.core.server.ServerMessageDeliverer
 import org.eclipse.californium.core.server.resources.Resource

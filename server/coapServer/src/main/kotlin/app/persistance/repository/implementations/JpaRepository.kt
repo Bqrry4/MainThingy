@@ -1,7 +1,7 @@
-package app.persistance.repository.implementations
+package com.nyanthingy.app.persistance.repository.implementations
 
-import app.config.JpaConfig
-import app.persistance.repository.interfaces.Repository
+import com.nyanthingy.app.config.JpaConfig
+import com.nyanthingy.app.persistance.repository.interfaces.Repository
 import jakarta.persistence.EntityManager
 
 /**

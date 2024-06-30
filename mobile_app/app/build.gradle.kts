@@ -104,10 +104,13 @@ dependencies {
     //add kotlinx-serialization
     implementation(libs.kotlinx.serialization.json)
 
+    //Charts
+//    implementation(libs.ycharts)
+
     //Animation
     runtimeOnly("androidx.compose.animation:animation:1.6.7")
 
-    // WorkManager dependency
+    // WorkManager
     implementation("androidx.work:work-runtime-ktx:2.8.1")
 
     //Tests

@@ -20,21 +20,34 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.common.core.DataByteArray
 import no.nordicsemi.android.kotlin.ble.client.main.callback.ClientBleGatt
 import no.nordicsemi.android.kotlin.ble.client.main.service.ClientBleGattCharacteristic
 import no.nordicsemi.android.kotlin.ble.core.data.BleGattConnectOptions
+import no.nordicsemi.android.kotlin.ble.core.data.GattConnectionState
 import javax.inject.Inject
 
 internal data class BleDevice(
     val client: ClientBleGatt,
     val rxCharacteristic: ClientBleGattCharacteristic,
-    val txCharacteristic: ClientBleGattCharacteristic
+    val txCharacteristic: ClientBleGattCharacteristic,
+)
+
+internal data class RegisteredDevice(
+    val bleDevice: BleDevice,
+    val connectionState: StateFlow<GattConnectionState>
 )
 
 data class BleMessage(
@@ -47,8 +60,7 @@ class BleService : Service() {
 
     @Inject
     lateinit var devicesRepository: DevicesRepository
-    private var knownDevicesList = emptyList<String>()
-    private val connectedDevices = mutableMapOf<String, BleDevice>()
+    private val registeredDevices = mutableMapOf<String, RegisteredDevice>()
 
     private val messageChannel = Channel<BleMessage>()
     val incomingMessages = messageChannel.receiveAsFlow()
@@ -82,33 +94,16 @@ class BleService : Service() {
 
         //collect devices state
         serviceScope.launch {
-            devicesRepository.getAll().collect {
-                knownDevicesList = it
-                //try to connect
-                knownDevicesList.forEach { address ->
-                    connect(address)
-                }
-            }
-        }
-
-        //Check connections and try to connect to known devices
-        serviceScope.launch {
-            while (true) {
-
-                val content = if (connectedDevices.isEmpty()) {
-                    "Running"
-                } else {
-                    connectedDevices.keys.reduce { content, entry ->
-                        "$content $entry \n"
+            devicesRepository.getAll().collect { addresses ->
+                //try to connect and register
+                addresses
+                    .filter { address -> address !in registeredDevices }
+                    .forEach { address ->
+                        connect(address)
                     }
-                }
-
-                updateNotification("Maintaining connection", content)
-
-                //wait 1 minute
-                delay(60000)
             }
         }
+
     }
 
     override fun onDestroy() {
@@ -121,7 +116,7 @@ class BleService : Service() {
         when (intent?.action) {
             CLOSE_INTENT -> {
                 //close the service when there are no devices to maintain connection
-                if (knownDevicesList.isEmpty()) {
+                if (registeredDevices.isEmpty()) {
                     stopSelf()
                 }
             }
@@ -167,13 +162,14 @@ class BleService : Service() {
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
 
+    /**
+     * Trying to connect and adds it to the registeredDevices on success
+     */
     @SuppressLint("MissingPermission")
     private fun connect(macAddress: String) = serviceScope.launch {
 
-        if (macAddress in connectedDevices &&
-            connectedDevices[macAddress]!!.client.isConnected
-        ) {
-            //Already connected
+        if (macAddress in registeredDevices) {
+            //Already in list
             return@launch
         }
 
@@ -206,29 +202,88 @@ class BleService : Service() {
                     data = it
                 )
             )
-
         }.launchIn(serviceScope)
 
         Log.println(Log.INFO, "ble service", "Connected to $macAddress")
 
-        connectedDevices[macAddress] = BleDevice(
+        val bleDevice = BleDevice(
             client = client,
             rxCharacteristic = rxCharacteristic,
-            txCharacteristic = txCharacteristic
+            txCharacteristic = txCharacteristic,
         )
+
+        val connectionStateFlow = MutableStateFlow(GattConnectionState.STATE_DISCONNECTED)
+        registeredDevices[macAddress] =
+            RegisteredDevice(bleDevice, connectionStateFlow)
+
+        //Observe the connection status
+        client.connectionState.collect {
+            when (it) {
+                GattConnectionState.STATE_CONNECTED,
+                GattConnectionState.STATE_DISCONNECTED -> {
+                    //updating the state
+                    deviceConnectionStateChange()
+                    connectionStateFlow.value = it
+                }
+
+                else -> {}
+            }
+        }
+    }
+
+    private fun deviceConnectionStateChange() {
+
+        val content = if (registeredDevices.isEmpty()) {
+            "Running"
+        } else {
+            registeredDevices.keys.reduce { content, entry ->
+                "$content $entry \n"
+            }
+        }
+
+        updateNotification("Maintaining connection", content)
     }
 
     @SuppressLint("MissingPermission")
     fun write(message: BleMessage) {
         //maybe throw exception
-        if (message.macAddress !in connectedDevices) {
+        if (message.macAddress !in registeredDevices) {
             Log.println(Log.ERROR, "ble service", "Device not connected")
             return
         }
 
         serviceScope.launch {
-            connectedDevices[message.macAddress]!!.rxCharacteristic.write(message.data)
+            registeredDevices[message.macAddress]!!.bleDevice.rxCharacteristic.write(message.data)
         }
+    }
+
+    /**
+     * Get the rssiFlow of the device associated with the macAddress
+     * @param samplingInterval in ms
+     */
+    fun rssiFlow(macAddress: String, samplingInterval: Long): Flow<Int> {
+
+        val device = registeredDevices[macAddress]!!.bleDevice
+        return callbackFlow {
+
+            val readRssiJob = launch {
+                while (true) {
+                    trySend(device.client.readRssi())
+                    delay(samplingInterval)
+                }
+            }
+
+            awaitClose {
+                readRssiJob.cancel()
+            }
+        }
+    }
+
+    /**
+     * Get the connectionState of the device associated with the macAddress
+     */
+    fun connectionState(macAddress: String): StateFlow<GattConnectionState> {
+        return registeredDevices[macAddress]!!.connectionState
     }
 
 }

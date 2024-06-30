@@ -1,6 +1,6 @@
-package app.config
+package com.nyanthingy.app.config
 
-import app.AppContainer
+import com.nyanthingy.app.AppContainer
 import com.rabbitmq.client.*
 
 

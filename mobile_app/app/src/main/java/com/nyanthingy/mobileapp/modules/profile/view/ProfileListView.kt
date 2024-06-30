@@ -30,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.nyanthingy.mobileapp.R
 import com.nyanthingy.mobileapp.modules.ble.client.viewmodel.BleViewModel
@@ -55,6 +57,7 @@ import com.nyanthingy.mobileapp.modules.profile.viewmodel.ProfileViewModel
 import com.nyanthingy.mobileapp.ui.navigation.LeafRoute
 import com.nyanthingy.mobileapp.ui.navigation.navigator.NavigationViewModel
 import com.nyanthingy.mobileapp.ui.theme.NyanthingyAppTheme
+import no.nordicsemi.android.kotlin.ble.core.data.GattConnectionState
 
 @Composable
 fun ProfileListView(
@@ -66,10 +69,51 @@ fun ProfileListView(
 
     //FIXME:
     val ble = hiltViewModel<BleViewModel>()
+
+    val availabilityState by ble.availabilityState.collectAsStateWithLifecycle()
+
+    if(availabilityState)
+    {
+        val connectionState by ble.connectionState(
+            profiles[
+                viewModel.selectedProfile
+            ].macAddress!!
+        ).collectAsStateWithLifecycle()
+
+        when(connectionState)
+        {
+            GattConnectionState.STATE_CONNECTED -> {
+                val state by ble.signalStrength(
+                    profiles[
+                        viewModel.selectedProfile
+                    ].macAddress!!
+                ).collectAsStateWithLifecycle()
+                println(state)
+
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.zIndex(3f)
+                )
+                {
+                    Text(
+                        text =
+                        when (state) {
+                            null -> ""
+                            else -> state
+                        }
+                    )
+                }
+            }
+            else -> {}
+        }
+    }
+
+
+
     Box(
         contentAlignment = Alignment.BottomStart,
         modifier = Modifier.zIndex(3f)
-    ){
+    ) {
         Button(onClick = {
             ble.setBuzzerState(
                 profiles[
@@ -80,7 +124,6 @@ fun ProfileListView(
         }) {
         }
     }
-
 
 
     var dropDownItems: List<@Composable () -> Unit> = profiles.map {
@@ -124,7 +167,7 @@ fun ProfileListView(
         }
     }
 
-    dropDownItems = dropDownItems.plus (addProfileDropDownItem)
+    dropDownItems = dropDownItems.plus(addProfileDropDownItem)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,

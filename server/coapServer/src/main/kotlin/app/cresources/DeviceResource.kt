@@ -1,9 +1,8 @@
-package app.cresources
+package com.nyanthingy.app.cresources
 
-import app.AppContainer
-import app.dto.GeoEntryDTO
-import app.dto.SecretEntryDTO
-import app.persistance.model.Device
+import com.nyanthingy.app.AppContainer
+import com.nyanthingy.app.dto.SecretEntryDTO
+import com.nyanthingy.app.persistance.model.Device
 import com.fasterxml.jackson.core.exc.StreamReadException
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
 import org.eclipse.californium.core.CoapResource

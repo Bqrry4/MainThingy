@@ -16,7 +16,7 @@ services:
     networks:
       - intern
 
-  http-service:
+  http-proxy:
     build:
       context: ./httpServer/
       dockerfile: Dockerfile
@@ -25,6 +25,23 @@ services:
       - "8080:8080"
     expose:
       - "8080"
+    networks:
+      - intern
+    depends_on:
+      - mariadb-nyan
+    restart: on-failure:10
+
+  coap-service:
+    build:
+      context: ./coapServer/
+      dockerfile: Dockerfile
+    container_name: nyanCoap
+    ports:
+      - "5683:5683"
+      - "5684:5684"
+    expose:
+      - "5683"
+      - "5684"
     networks:
       - intern
     depends_on:

@@ -1,4 +1,4 @@
-package app.cresources
+package com.nyanthingy.app.cresources
 
 import org.eclipse.californium.core.CoapResource
 import org.eclipse.californium.core.network.Exchange

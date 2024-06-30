@@ -1,16 +1,7 @@
-package app.config
+package com.nyanthingy.app.config
 
 import jakarta.persistence.EntityManagerFactory
 import jakarta.persistence.Persistence
-import jakarta.persistence.SharedCacheMode
-import jakarta.persistence.ValidationMode
-import jakarta.persistence.spi.ClassTransformer
-import jakarta.persistence.spi.PersistenceUnitInfo
-import jakarta.persistence.spi.PersistenceUnitTransactionType
-import org.hibernate.jpa.HibernatePersistenceProvider
-import java.net.URL
-import java.util.*
-import javax.sql.DataSource
 
 
 object JpaConfig {

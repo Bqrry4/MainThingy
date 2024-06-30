@@ -29,6 +29,7 @@ roomVersion = "2.6.1"
 secretsGradlePluginVersion = "2.0.1"
 lifecycleRuntimeCompose = "2.7.0"
 uiUtilVersion = "1.6.8"
+ychartsVersion = "2.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -70,6 +71,7 @@ retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit
 retrofit-converter-kotlinx-serialization = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "retrofitVersion" }
 scanner = { module = "no.nordicsemi.android.kotlin.ble:scanner", version.ref = "advertiser" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
+ycharts = { module = "co.yml:ycharts", version.ref = "ychartsVersion" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

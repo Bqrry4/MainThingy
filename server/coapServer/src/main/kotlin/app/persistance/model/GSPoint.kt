@@ -1,4 +1,4 @@
-package app.persistance.model
+package com.nyanthingy.app.persistance.model
 
 import jakarta.persistence.*
 import java.util.*

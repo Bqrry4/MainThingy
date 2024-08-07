@@ -6,7 +6,6 @@
 
 #include "uart_channel.h"
 
-#define SLEEP_TIME_MS 1000
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(CONFIG_UART_WAIT_FOR_BUFFER_DELAY)
 
 LOG_MODULE_REGISTER(uart_channel);
@@ -19,7 +18,7 @@ static void uart_event_handler(const struct device *dev, struct uart_event *evt,
 /** @brief The low power uart device*/
 struct device *lpuart = DEVICE_DT_GET(DT_NODELABEL(lpuart));
 
-/** @brief Work that tries to alloc a buffer and enable de receive on uart*/
+/** @brief Work that tries to alloc a buffer and enable the receive on uart*/
 static struct k_work_delayable wait_for_buf_work;
 static void wait_for_buf_work_handler(struct k_work *work);
 

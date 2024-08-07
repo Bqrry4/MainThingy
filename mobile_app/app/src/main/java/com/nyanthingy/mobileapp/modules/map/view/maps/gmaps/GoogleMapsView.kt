@@ -50,7 +50,7 @@ fun GoogleMapsView(
     contentPadding: PaddingValues = PaddingValues(),
     onCameraMoving: () -> Unit = {},
     animateTransition: Boolean = false,
-    overlays: List<@Composable ((MapsProjection) -> Unit)>? = null,
+    overlays: List<@Composable ((MapsProjection) -> Unit)> = emptyList(),
     onCameraChange: (FocusCameraPosition) -> Unit = {}
 ) {
     val cameraPositionState = rememberCameraPositionState {}
@@ -131,7 +131,7 @@ fun GoogleMapsView(
     //Draw overlays
     projection?.let {
         //Draw all overlays
-        overlays?.forEach { overlay ->
+        overlays.forEach { overlay ->
             overlay(GmapsProjection(it))
         }
     }

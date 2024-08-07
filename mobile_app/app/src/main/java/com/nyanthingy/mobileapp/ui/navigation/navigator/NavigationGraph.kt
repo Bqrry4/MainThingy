@@ -62,8 +62,6 @@ fun NavigationGraph(
 
                         //finish the Activity if at root
                         if (!navController.navigateUp()) {
-                            Log.println(Log.DEBUG, null, "ff")
-
                             activity.finish()
                         }
                     }

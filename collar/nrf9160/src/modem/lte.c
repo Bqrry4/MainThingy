@@ -5,7 +5,11 @@
 
 LOG_MODULE_REGISTER(lte_module);
 
-K_SEM_DEFINE(lte_connected_sem, 0, 1);
+// K_SEM_DEFINE(lte_connected_sem, 0, 1);
+
+//for atomic read/write
+K_MUTEX_DEFINE(network_connected_lock);
+K_CONDVAR_DEFINE(network_connected);
 
 static bool is_connected = false;
 
@@ -44,15 +48,11 @@ int activate_lte()
     lte_lc_func_mode_get(&mode);
     LOG_INF("%d mode", mode);
 
-    LOG_ERR("Semafor in");
-
-    k_sem_take(&lte_connected_sem, K_FOREVER);
+    // k_sem_take(&lte_connected_sem, K_FOREVER);
 
     // FIXME:
     /* Wait for a while, because with IPv4v6 PDN the IPv6 activation takes a bit more time. */
     k_sleep(K_SECONDS(1));
-
-    LOG_INF("After semafor out");
 
     return 0;
 }
@@ -85,6 +85,19 @@ bool wait_for_lte_connection(uint16_t seconds)
     return is_connected;
 }
 
+void wait_for_lte_connection_blocking()
+{
+    k_mutex_lock(&network_connected_lock, K_FOREVER);
+
+    if (!is_connected)
+    {
+        LOG_INF("Waiting for network connectivity");
+        k_condvar_wait(&network_connected, &network_connected_lock, K_FOREVER);
+    }
+
+    k_mutex_unlock(&network_connected_lock);
+}
+
 static void lte_handler(const struct lte_lc_evt *const evt)
 {
     switch (evt->type)
@@ -95,11 +108,15 @@ static void lte_handler(const struct lte_lc_evt *const evt)
         {
             LOG_INF("Network registration status: %s",
                     evt->nw_reg_status == LTE_LC_NW_REG_REGISTERED_HOME ? "Connected - home network" : "Connected - roaming");
+
+            k_mutex_lock(&network_connected_lock, K_FOREVER);
             is_connected = true;
+            k_condvar_signal(&network_connected);
+            k_mutex_unlock(&network_connected_lock);
+
             break;
         }
-        is_connected = false;
-        break;
+\
     case LTE_LC_EVT_PSM_UPDATE:
         LOG_INF("PSM parameter update: TAU: %d, Active time: %d",
                 evt->psm_cfg.tau, evt->psm_cfg.active_time);

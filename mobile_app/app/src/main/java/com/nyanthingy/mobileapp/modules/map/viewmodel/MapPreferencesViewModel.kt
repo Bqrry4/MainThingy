@@ -1,6 +1,5 @@
 package com.nyanthingy.mobileapp.modules.map.viewmodel
 
-import android.os.Parcelable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -8,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import com.google.maps.android.compose.MapType
 import com.nyanthingy.mobileapp.modules.map.utils.GeoPosition
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.parcelize.Parcelize
 import javax.inject.Inject
 
 interface MapsProperties {

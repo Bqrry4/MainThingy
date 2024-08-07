@@ -10,6 +10,7 @@ zephyr_include_directories(src)
 
 # App headers
 zephyr_library_include_directories(
+  src
   src/events
   src/modem
   src/uart_channel

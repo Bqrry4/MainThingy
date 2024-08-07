@@ -7,7 +7,8 @@ CREATE TABLE Devices(
 );
 
 CREATE TABLE GSPoints(
-    time_stamp datetime(3) primary key,
+    point_id int primary key,
+    time_stamp datetime(3),
     longitude float not null,
     latitude float not null,
     accuracy float,

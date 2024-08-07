@@ -71,5 +71,5 @@ static void feed_worker(struct k_work *work)
     }
 
     //Reschedule this work
-    k_work_reschedule(work, K_MSEC(WDT_FEED_WORKER_DELAY_MS));
+    k_work_reschedule(&watchdog_feed_workqueue, K_MSEC(WDT_FEED_WORKER_DELAY_MS));
 }

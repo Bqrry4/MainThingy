@@ -1,5 +1,14 @@
 package com.nyanthingy.mobileapp.modules.commons.extensions
 
+import android.content.ContentResolver
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
+import android.graphics.drawable.BitmapDrawable
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -9,7 +18,9 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerEvent
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -17,11 +28,14 @@ import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
+import coil.ImageLoader
+import coil.request.ImageRequest
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
@@ -189,4 +203,23 @@ suspend fun PointerInputScope.detectZoomGesture(onZoom: (Float) -> Unit) {
 
 fun calculateDistance(x1: Float, y1: Float, x2: Float, y2: Float): Float {
     return hypot(x2 - x1, y2 - y1)
+}
+
+/**
+ * Gets an bitmap from uri.
+ * @param uri The URI of the image to be converted to a Bitmap.
+ * @return The Bitmap representation of the image, or null if conversion fails.
+ */
+fun bitmapFromUri(context: Context, uri: Uri): Bitmap? {
+    val contentResolver: ContentResolver = context.contentResolver
+
+    return if (Build.VERSION.SDK_INT >= 28) {
+        val source = ImageDecoder.createSource(contentResolver, uri)
+        ImageDecoder.decodeBitmap(source)
+    } else {
+        val bitmap = contentResolver.openInputStream(uri)?.use { stream ->
+            Bitmap.createBitmap(BitmapFactory.decodeStream(stream))
+        }
+        bitmap
+    }
 }

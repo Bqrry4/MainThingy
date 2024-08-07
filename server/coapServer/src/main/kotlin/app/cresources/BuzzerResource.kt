@@ -1,5 +1,7 @@
 package com.nyanthingy.app.cresources
 
+import com.fasterxml.jackson.core.exc.StreamReadException
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
 import com.nyanthingy.app.AppContainer
 import com.nyanthingy.app.dto.StateDto
 import org.eclipse.californium.core.CoapResource
@@ -18,7 +20,7 @@ class BuzzerResource : CoapResource("buz"){
     private val _mapper = AppContainer.mapper
 
     //the state does not have to persist
-    private val state: Boolean? = null
+    private var state: Boolean? = null
 
     //Only one device could observe its own resource
     override fun addObserveRelation(relation: ObserveRelation) {
@@ -40,7 +42,7 @@ class BuzzerResource : CoapResource("buz"){
                     ResponseCode.CONTENT,
                     _mapper.writeValueAsBytes(
                         StateDto(
-                            st = state
+                            st = state!!
                         )
                     )
                 )
@@ -48,8 +50,27 @@ class BuzzerResource : CoapResource("buz"){
         }
     }
 
+
     override fun handlePUT(exchange: CoapExchange) {
-        changed()
+
+        runCatching {
+            val dto = _mapper.reader().readValue(
+                exchange.requestPayload,
+                StateDto::class.java
+            )
+            state = dto.st
+
+        }.onFailure {
+            println(it.toString())
+            when (it) {
+                is StreamReadException,
+                is UnrecognizedPropertyException -> exchange.respond(ResponseCode.BAD_REQUEST)
+
+                else -> exchange.respond(ResponseCode.INTERNAL_SERVER_ERROR)
+            }
+        }
+//        changed()
+//        notifyObserverRelations(null)
         exchange.respond(ResponseCode.CHANGED)
     }
 }

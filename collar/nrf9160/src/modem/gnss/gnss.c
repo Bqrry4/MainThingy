@@ -6,12 +6,14 @@
 #include "../modem_config.h"
 #include "assistance/assistance.h"
 #include "gnss_fix_event.h"
+#include "gnns_mode_state_event.h"
 
-LOG_MODULE_REGISTER(gnss_module);
+
+LOG_MODULE_REGISTER(gnss_module, LOG_LEVEL_DBG);
 
 K_SEM_DEFINE(gnss_fix_sem, 0, 1);
 
-#define GNSS_WORKQ_THREAD_STACK_SIZE 4096
+#define GNSS_WORKQ_THREAD_STACK_SIZE 10000
 #define GNSS_WORKQ_THREAD_PRIORITY 5
 
 K_THREAD_STACK_DEFINE(gnss_workq_stack_area, GNSS_WORKQ_THREAD_STACK_SIZE);
@@ -25,7 +27,6 @@ static struct k_work agnss_req_work;
 static struct k_work lte_disable_work;
 
 static void gnss_event_handler(int event_id);
-static void print_fix_data(struct nrf_modem_gnss_pvt_data_frame *pvt_data);
 static void agnss_req_work_fn(struct k_work *item);
 
 int gnss_init()
@@ -79,10 +80,11 @@ int gnss_init()
     // This use case flag should always be set.
     uint8_t use_case = NRF_MODEM_GNSS_USE_CASE_MULTIPLE_HOT_START | NRF_MODEM_GNSS_USE_CASE_LOW_ACCURACY;
 
-	// Disable scheduled downloads when using assistance
-	if (IS_ENABLED(CONFIG_USE_ASSISTANCE)) {
-		use_case |= NRF_MODEM_GNSS_USE_CASE_SCHED_DOWNLOAD_DISABLE;
-	}
+    // Disable scheduled downloads when using assistance
+    if (IS_ENABLED(CONFIG_USE_ASSISTANCE))
+    {
+        use_case |= NRF_MODEM_GNSS_USE_CASE_SCHED_DOWNLOAD_DISABLE;
+    }
 
     err = nrf_modem_gnss_use_case_set(use_case);
     if (err)
@@ -118,12 +120,20 @@ int activate_gnss()
 {
     LOG_INF("Enabling GNSS");
 
-    int err = lte_lc_func_mode_set(LTE_LC_FUNC_MODE_ACTIVATE_GNSS);
+    // int err = lte_lc_func_mode_set(LTE_LC_FUNC_MODE_ACTIVATE_GNSS);
+    // if (err)
+    // {
+    //     LOG_ERR("Failed to activate GNSS functional mode");
+    //     return err;
+    // }
+
+    int err = nrf_modem_gnss_start();
     if (err)
     {
         LOG_ERR("Failed to activate GNSS functional mode");
         return err;
     }
+
     return 0;
 }
 
@@ -131,7 +141,13 @@ int deactivate_gnss()
 {
     LOG_INF("Disabling GNSS");
 
-    int err = lte_lc_func_mode_set(LTE_LC_FUNC_MODE_DEACTIVATE_GNSS);
+    // int err = lte_lc_func_mode_set(LTE_LC_FUNC_MODE_DEACTIVATE_GNSS);
+    // if (err)
+    // {
+    //     LOG_ERR("Failed to deactivate GNSS functional mode");
+    //     return err;
+    // }
+    int err = nrf_modem_gnss_stop();
     if (err)
     {
         LOG_ERR("Failed to deactivate GNSS functional mode");
@@ -143,6 +159,7 @@ int deactivate_gnss()
 static void gnss_event_handler(int event_id)
 {
     int err;
+    struct gnss_fix_event *event;
 
     switch (event_id)
     {
@@ -167,12 +184,19 @@ static void gnss_event_handler(int event_id)
 
         break;
     case NRF_MODEM_GNSS_EVT_PERIODIC_WAKEUP:
-        LOG_DBG("GNSS has woken up");
+        LOG_INF("GNSS has woken up");
         break;
     case NRF_MODEM_GNSS_EVT_FIX:
-        LOG_DBG("GNSS recieved a fix");
+        LOG_INF("GNSS recieved a fix");
 
-        struct gnss_fix_event *event = new_gnss_fix_event();
+        err = nrf_modem_gnss_read(&pvt_data, sizeof(pvt_data), NRF_MODEM_GNSS_DATA_PVT);
+        if (err)
+        {
+            LOG_ERR("nrf_modem_gnss_read failed, err %d", err);
+            return;
+        }
+
+        event = new_gnss_fix_event();
 
         event->pvt_data = pvt_data;
         APP_EVENT_SUBMIT(event);
@@ -180,7 +204,7 @@ static void gnss_event_handler(int event_id)
         break;
 
     case NRF_MODEM_GNSS_EVT_SLEEP_AFTER_TIMEOUT:
-        LOG_DBG("GNSS sleep after timeout");
+        LOG_INF("GNSS sleep after timeout");
         break;
 
     case NRF_MODEM_GNSS_EVT_SLEEP_AFTER_FIX:
@@ -249,5 +273,61 @@ static void agnss_req_work_fn(struct k_work *item)
     {
         LOG_ERR("Error setting GNSS priority mode");
     }
-    deactivate_lte();
+    // deactivate_lte();
 }
+
+static bool app_event_handler(const struct app_event_header *aeh)
+{
+
+    if (is_gnns_mode_state_event(aeh))
+    {
+        struct gnns_mode_state_event *event = cast_gnns_mode_state_event(aeh);
+
+        int err;
+        LOG_INF("Changing gnss state to %d", event->state);
+        if (event->state)
+        {
+
+            err = nrf_modem_gnss_stop();
+            if (err)
+            {
+                LOG_INF("Failed to stop gnss");
+            }
+            err = nrf_modem_gnss_fix_interval_set(10);
+            if (err)
+            {
+                LOG_INF("Failed to set interval");
+            }
+            err = nrf_modem_gnss_start();
+            if (err)
+            {
+                LOG_INF("Failed to restart");
+            }
+        }
+        else
+        {
+            err = nrf_modem_gnss_stop();
+            if (err)
+            {
+                LOG_INF("Failed to stop gnss");
+            }
+            err = nrf_modem_gnss_fix_interval_set(CONFIG_GNSS_PERIODIC_INTERVAL);
+            if (err)
+            {
+                LOG_INF("Failed to set interval");
+            }
+            err = nrf_modem_gnss_start();
+            if (err)
+            {
+                LOG_INF("Failed to restart");
+            }
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+APP_EVENT_LISTENER(gnss, app_event_handler);
+APP_EVENT_SUBSCRIBE(gnss, gnns_mode_state_event);

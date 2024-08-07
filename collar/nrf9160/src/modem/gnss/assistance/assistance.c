@@ -47,7 +47,7 @@ int assistance_init(struct k_work_q *work_q)
 {
     int err;
 
-    __ASSERT(assistance_work_q != NULL,
+    __ASSERT(work_q != NULL,
              "null pointer assertion for parameter work_q");
 
     assistance_work_q = work_q;
@@ -253,11 +253,13 @@ int assistance_request(struct nrf_modem_gnss_agnss_data_frame *agnss_request)
 
 #if defined(CONFIG_USE_ASSISTANCE_AGNSS)
     // Check for connection, and wait with a timeout of 5 min
-    if (!wait_for_lte_connection(300))
+    if (!wait_for_lte_connection(600))
     {
         LOG_ERR("Cannot proceed to request agnss assistance from nRfCloud as LTE is lacking connection");
         goto agnss_exit;
     }
+
+    // wait_for_lte_connection_blocking();
 
     err = nrf_cloud_coap_connect(NULL);
     if (err)

@@ -1,11 +1,12 @@
 [versions]
 accompanistPermissionsVersion = "0.30.0"
 coilComposeVersion = "2.6.0"
+converterGsonVersion = "2.11.0"
 kotlin = "1.9.0"
 hilt = "2.51.1"
 kotlinxSerializationJsonVersion = "1.7.0"
 ksp = "1.9.20-1.0.14"
-advertiser = "1.0.14"
+nrfBle = "1.0.14"
 agp = "8.3.2"
 hiltNavigationCompose = "1.2.0"
 coreKtx = "1.13.1"
@@ -29,10 +30,13 @@ roomVersion = "2.6.1"
 secretsGradlePluginVersion = "2.0.1"
 lifecycleRuntimeCompose = "2.7.0"
 uiUtilVersion = "1.6.8"
+workRuntimeKtxVersion = "2.9.0"
 ychartsVersion = "2.1.0"
+hiltWorkVersion = "1.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltNavigationCompose" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-material-icons-extended-android = { module = "androidx.compose.material:material-icons-extended-android", version.ref = "material" }
 androidx-preference = { module = "androidx.preference:preference", version.ref = "preference" }
@@ -40,8 +44,11 @@ androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref =
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomVersion" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomVersion" }
 androidx-ui-util = { module = "androidx.compose.ui:ui-util", version.ref = "uiUtilVersion" }
-client = { module = "no.nordicsemi.android.kotlin.ble:client", version.ref = "advertiser" }
+androidx-work-runtime = { module = "androidx.work:work-runtime", version.ref = "workRuntimeKtxVersion" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtxVersion" }
+client = { module = "no.nordicsemi.android.kotlin.ble:client", version.ref = "nrfBle" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilComposeVersion" }
+converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGsonVersion" }
 google-accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissionsVersion" }
 google-secrets-gradle-plugin = { module = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin", version.ref = "secretsGradlePluginVersion" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
@@ -69,9 +76,10 @@ play-services-location = { module = "com.google.android.gms:play-services-locati
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofitVersion" }
 retrofit-converter-kotlinx-serialization = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "retrofitVersion" }
-scanner = { module = "no.nordicsemi.android.kotlin.ble:scanner", version.ref = "advertiser" }
+scanner = { module = "no.nordicsemi.android.kotlin.ble:scanner", version.ref = "nrfBle" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
 ycharts = { module = "co.yml:ycharts", version.ref = "ychartsVersion" }
+androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltWorkVersion" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

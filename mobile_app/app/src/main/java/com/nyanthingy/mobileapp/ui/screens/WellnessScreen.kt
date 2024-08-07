@@ -14,38 +14,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.nyanthingy.mobileapp.ui.theme.NyanthingyAppTheme
 import com.nyanthingy.mobileapp.R
+import com.nyanthingy.mobileapp.modules.commons.extensions.ignoreParentPadding
+import com.nyanthingy.mobileapp.modules.map.view.MapsView
+import com.nyanthingy.mobileapp.modules.wellness.view.WellnessView
 
 @Composable
 fun WellnessScreen() {
     NyanthingyAppTheme {
         Surface(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .ignoreParentPadding(vertical = 20.dp), //make the map blend a little with the bottom bar
             color = MaterialTheme.colorScheme.background
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(15.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxWidth()
-                        .height(200.dp)
-                        .padding(horizontal = 15.dp, vertical = 10.dp)
-                        .clip(MaterialTheme.shapes.large)
-                ) {
-                    Image(
-                        painter = painterResource(R.drawable.cat),
-                        contentDescription = "home_screen_bg",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-                Text(
-                    "Home Scree2n",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(vertical = 20.dp)
-                )
-            }
+            WellnessView()
         }
     }
 }

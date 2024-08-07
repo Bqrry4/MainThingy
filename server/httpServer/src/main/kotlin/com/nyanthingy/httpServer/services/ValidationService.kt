@@ -13,9 +13,16 @@ class ValidationService (
         if(devices.count() == 0)
             return -1
 
+        val token =
+            kotlin.runCatching {
+                secret.split("Bearer ")[1];
+            } .getOrElse {
+                return -2
+            }
+
         val device = devices.first()
-        if(device.secret != secret)
-            return -2
+        if(device.secret != token)
+            return -3
 
         return device.deviceID
     }

@@ -11,6 +11,7 @@ import com.nyanthingy.httpServer.utils.mapCoAPToHTTPCodes
 import org.eclipse.californium.core.CoapClient
 import org.eclipse.californium.core.coap.CoAP
 import org.eclipse.californium.core.coap.MediaTypeRegistry
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -27,14 +28,18 @@ class HTTPToCoAPController(
     @PutMapping("/{mac}/led")
     fun setLedState(
         @PathVariable(name = "mac") mac: String,
+        @RequestHeader(HttpHeaders.AUTHORIZATION) secret: String,
         @RequestBody req: StateRequestDTO
     ): ResponseEntity<Any> {
-        val deviceID = _validationService.validateClient(mac, req.secret)
+        val deviceID = _validationService.validateClient(mac, secret)
 
         if (deviceID == -1) // no device found
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build()
 
-        if (deviceID == -2) // invalid secret
+        if (deviceID == -2) // bad header format
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build()
+
+        if (deviceID == -3) // invalid secret
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
 
         _coapClient.uri = CoApClientConfig.defaultUri + "/devs/$mac/led"
@@ -61,14 +66,18 @@ class HTTPToCoAPController(
     @PutMapping("/{mac}/buz")
     fun setBuzzState(
         @PathVariable(name = "mac") mac: String,
+        @RequestHeader(HttpHeaders.AUTHORIZATION) secret: String,
         @RequestBody req: StateRequestDTO
     ): ResponseEntity<Any> {
-        val deviceID = _validationService.validateClient(mac, req.secret)
+        val deviceID = _validationService.validateClient(mac, secret)
 
         if (deviceID == -1) // no device found
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build()
 
-        if (deviceID == -2) // invalid secret
+        if (deviceID == -2) // bad header format
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build()
+
+        if (deviceID == -3) // invalid secret
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
 
         _coapClient.uri = CoApClientConfig.defaultUri + "/devs/$mac/buz"
@@ -95,14 +104,18 @@ class HTTPToCoAPController(
     @PutMapping("/{mac}/gnssm")
     fun setGnssMode(
         @PathVariable(name = "mac") mac: String,
+        @RequestHeader(HttpHeaders.AUTHORIZATION) secret: String,
         @RequestBody req: StateRequestDTO
     ): ResponseEntity<Any> {
-        val deviceID = _validationService.validateClient(mac, req.secret)
+        val deviceID = _validationService.validateClient(mac, secret)
 
         if (deviceID == -1) // no device found
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build()
 
-        if (deviceID == -2) // invalid secret
+        if (deviceID == -2) // bad header format
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build()
+
+        if (deviceID == -3) // invalid secret
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
 
         _coapClient.uri = CoApClientConfig.defaultUri + "/devs/$mac/gnssm"

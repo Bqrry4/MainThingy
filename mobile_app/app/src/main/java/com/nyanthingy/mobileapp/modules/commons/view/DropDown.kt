@@ -60,13 +60,13 @@ fun DropDownSelect(
             animationSpec = tween(
                 durationMillis = 300, easing = LinearOutSlowInEasing
             )
-        ).border(3.dp, Color.Green)
+        )
     )
     {
         if (!showDropdown) {
             Box(
                 modifier = Modifier
-                    .clickable { showDropdown = true }.border(3.dp, Color.Green),
+                    .clickable { showDropdown = true },
                 contentAlignment = Alignment.Center
             ) {
                 composableList[0].invoke()
@@ -89,7 +89,7 @@ fun DropDownSelect(
                                 .clickable {
                                     onItemClick(index)
                                     showDropdown = false
-                                }.border(3.dp, Color.Green),
+                                },
                             contentAlignment = Alignment.Center
                         ) {
                             composable()

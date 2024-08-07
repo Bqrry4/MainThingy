@@ -4,7 +4,7 @@ static void log_gnss_event(const struct app_event_header *aeh)
 {
 	struct gnss_fix_event *event = cast_gnss_fix_event(aeh);
 
-	APP_EVENT_MANAGER_LOG(aeh, "gnss_fix_event lat: %lf long: %lf alt: %lf",
+	APP_EVENT_MANAGER_LOG(aeh, "gnss_fix_event lat: %lf long: %lf acr: %lf",
 			  event->pvt_data.latitude, event->pvt_data.longitude,
 			  event->pvt_data.accuracy);
 }

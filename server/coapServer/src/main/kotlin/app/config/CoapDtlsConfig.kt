@@ -1,6 +1,7 @@
 package com.nyanthingy.app.config
 
 import org.eclipse.californium.core.config.CoapConfig
+import org.eclipse.californium.elements.config.TcpConfig
 import org.eclipse.californium.scandium.config.DtlsConfig
 
 class CoapDtlsConfig {
@@ -10,5 +11,6 @@ class CoapDtlsConfig {
     {
         CoapConfig.register()
         DtlsConfig.register()
+        TcpConfig.register()
     }
 }

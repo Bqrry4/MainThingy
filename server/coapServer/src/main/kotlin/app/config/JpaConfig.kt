@@ -8,7 +8,7 @@ object JpaConfig {
 
     private const val PERSISTENCE_UNIT_NAME = "jpa-hibernate-mariadb"
     private val properties = mapOf(
-        "jakarta.persistence.jdbc.url" to "jdbc:mariadb://localhost:53306/nyan",
+        "jakarta.persistence.jdbc.url" to "jdbc:mariadb://mariadb-nyan:3306/nyan",
         "jakarta.persistence.jdbc.user" to "user",
         "jakarta.persistence.jdbc.password" to "pass",
         "jakarta.persistence.jdbc.driver" to "org.mariadb.jdbc.Driver",

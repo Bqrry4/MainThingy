@@ -50,6 +50,10 @@ int modem_configure()
         //         return err;
         // }
 
+
+        activate_lte();
+        activate_gnss();
+
         // This will activate LTE mode
         err = lte_init();
         if (err)
@@ -57,8 +61,6 @@ int modem_configure()
                 LOG_ERR("Failed to init LTE module, error: %d", err);
                 return err;
         }
-
-        wait_for_lte_connection(100);
 
         // This will start GNSS mode after the lte_init
         err = gnss_init();

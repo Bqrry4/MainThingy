@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.os.Binder
@@ -27,10 +28,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.common.core.DataByteArray
 import no.nordicsemi.android.kotlin.ble.client.main.callback.ClientBleGatt
@@ -69,6 +68,7 @@ class BleService : Service() {
         private const val NOTIFICATION_ID = 1
         private const val CHANNEL_ID = "ble_service_channel"
         const val CLOSE_INTENT = "com.nyanthingy.ACTION_APP_CLOSE"
+        private const val ACTION_STOP_LISTEN = "com.nyanthingy.ACTION_STOP_LISTEN"
     }
 
     // Binder given to clients
@@ -82,7 +82,7 @@ class BleService : Service() {
     override fun onBind(intent: Intent?): IBinder = binder
 
     private val serviceJob = SupervisorJob()
-    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
+    private val serviceScope = CoroutineScope(Dispatchers.Main.immediate + serviceJob)
 
     override fun onCreate() {
         super.onCreate()
@@ -103,7 +103,6 @@ class BleService : Service() {
                     }
             }
         }
-
     }
 
     override fun onDestroy() {
@@ -120,6 +119,9 @@ class BleService : Service() {
                     stopSelf()
                 }
             }
+            ACTION_STOP_LISTEN -> {
+                stopSelf()
+            }
         }
 
         return START_STICKY
@@ -130,12 +132,18 @@ class BleService : Service() {
      */
     private fun createNotification(): Notification {
 
+        val intent = Intent(this, BleService::class.java)
+        intent.setAction(ACTION_STOP_LISTEN);
+        val actionIntent =
+            PendingIntent.getService(this, 123, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
         val notificationChannelId = CHANNEL_ID
         val notificationBuilder = NotificationCompat.Builder(this, notificationChannelId)
             .setContentTitle("Maintaining connection")
             .setContentText("Running...")
             .setSmallIcon(R.drawable.cat)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .addAction(R.mipmap.ic_launcher, "Close", actionIntent)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -152,10 +160,16 @@ class BleService : Service() {
 
     @SuppressLint("MissingPermission")
     private fun updateNotification(title: String, content: String) {
+        val intent = Intent(this, BleService::class.java)
+        intent.setAction(ACTION_STOP_LISTEN);
+        val actionIntent =
+            PendingIntent.getService(this, 123, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(content)
             .setSmallIcon(R.drawable.cat)
+            .addAction(R.mipmap.ic_launcher, "Close", actionIntent)
             .build()
 
         val notificationManager = NotificationManagerCompat.from(this)
@@ -180,6 +194,9 @@ class BleService : Service() {
                     autoConnect = true
                 )
             )
+
+        //client.requestConnectionPriority(BleGattConnectionPriority.HIGH)
+
 
         //did not connect
         if (!client.isConnected) {
@@ -224,6 +241,7 @@ class BleService : Service() {
                     //updating the state
                     deviceConnectionStateChange()
                     connectionStateFlow.value = it
+                    println(it)
                 }
 
                 else -> {}
@@ -233,10 +251,14 @@ class BleService : Service() {
 
     private fun deviceConnectionStateChange() {
 
-        val content = if (registeredDevices.isEmpty()) {
+        val connectedList = registeredDevices.filter {
+            it.value.bleDevice.client.isConnected
+        }
+
+        val content = if (connectedList.isEmpty()) {
             "Running"
         } else {
-            registeredDevices.keys.reduce { content, entry ->
+            connectedList.keys.reduce { content, entry ->
                 "$content $entry \n"
             }
         }
@@ -261,7 +283,10 @@ class BleService : Service() {
      * Get the rssiFlow of the device associated with the macAddress
      * @param samplingInterval in ms
      */
-    fun rssiFlow(macAddress: String, samplingInterval: Long): Flow<Int> {
+    fun rssiFlow(macAddress: String, samplingInterval: Long): Flow<Int>? {
+
+        if (registeredDevices[macAddress] == null)
+            return null
 
         val device = registeredDevices[macAddress]!!.bleDevice
         return callbackFlow {
@@ -282,8 +307,8 @@ class BleService : Service() {
     /**
      * Get the connectionState of the device associated with the macAddress
      */
-    fun connectionState(macAddress: String): StateFlow<GattConnectionState> {
-        return registeredDevices[macAddress]!!.connectionState
+    fun connectionState(macAddress: String): StateFlow<GattConnectionState>? {
+        return registeredDevices[macAddress]?.connectionState
     }
 
 }

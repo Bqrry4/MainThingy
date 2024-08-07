@@ -147,6 +147,11 @@
         </dependency>
         <dependency>
             <groupId>org.eclipse.californium</groupId>
+            <artifactId>element-connector-tcp-netty</artifactId>
+            <version>${californium.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.californium</groupId>
             <artifactId>demo-certs</artifactId>
             <version>${californium.version}</version>
         </dependency>

@@ -49,6 +49,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.maps.android.compose.MapType
 import com.nyanthingy.mobileapp.R
 import com.nyanthingy.mobileapp.modules.commons.extensions.dashedBorder
+import com.nyanthingy.mobileapp.modules.commons.view.SwitchableChoice
 import com.nyanthingy.mobileapp.modules.map.utils.GeoPosition
 import com.nyanthingy.mobileapp.modules.map.viewmodel.MapPreferencesViewModel
 import com.nyanthingy.mobileapp.modules.map.viewmodel.MapSelection
@@ -223,82 +224,6 @@ private fun MapPreferencesBottomSheetContent(
     }
 }
 
-@Composable
-private fun SwitchableChoice(
-    primaryText: String,
-    description: String,
-    onCheckedChange: (Boolean) -> Unit,
-    isChecked: Boolean,
-    icon: ImageVector,
-    includeDivider: Boolean = false
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    )
-    {
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surface),
-            contentAlignment = Alignment.Center
-        )
-        {
-            Icon(
-                imageVector = icon,
-                contentDescription = null
-            )
-        }
-
-        Column {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.Center,
-                )
-                {
-                    Text(
-                        text = primaryText,
-                        fontSize = 14.sp,
-                        style = TextStyle(
-                            platformStyle = PlatformTextStyle(
-                                includeFontPadding = false
-                            )
-                        )
-                    )
-                    Text(
-                        text = description,
-                        color = MaterialTheme.colorScheme.secondary,
-                        fontSize = 10.sp,
-                        style = TextStyle(
-                            platformStyle = PlatformTextStyle(
-                                includeFontPadding = false
-                            )
-                        )
-                    )
-                }
-                Box(
-                    Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.CenterEnd
-                )
-                {
-                    Switch(
-                        checked = isChecked,
-                        onCheckedChange = onCheckedChange
-                    )
-                }
-            }
-            if (includeDivider) {
-                HorizontalDivider(
-                    thickness = 2.dp,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-            }
-        }
-    }
-}
 
 @Composable
 private fun ChooseMapButton(

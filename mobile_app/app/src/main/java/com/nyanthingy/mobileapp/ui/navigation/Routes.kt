@@ -33,14 +33,14 @@ sealed class LeafRoute(val route: String) {
 interface Routes {
     companion object {
         val destinations = listOf<NavigationDestination>(
+            ComposableDestination(RootRoute.Profile.route) {
+                ProfileScreen()
+            },
             ComposableDestination(RootRoute.Wellness.route) {
                 WellnessScreen()
             },
             ComposableDestination(RootRoute.Map.route) {
-               MapScreen()
-            },
-            ComposableDestination(RootRoute.Profile.route) {
-                ProfileScreen()
+                MapScreen()
             },
             ComposableDestination(LeafRoute.AddProfile.route) {
                 AddProfileView()

@@ -9,29 +9,58 @@
 #include <zcbor_common.h>
 #include <zcbor_encode.h>
 #include <zcbor_decode.h>
+#include <zephyr/net/coap_client.h>
+
+// events for polling
+#include "led_state_event.h"
+#include "buzzer_state_event.h"
+#include "gnns_mode_state_event.h"
 
 #include "server_exchange.h"
 
 LOG_MODULE_REGISTER(server_exchange);
 
-static int sock;
-static struct pollfd fds;
-static struct sockaddr_storage server;
+bool isInitialized = false;
 
-static uint8_t coap_send_buf[1024];
-static uint8_t coap_recv_buf[1024];
+int sock;
+static struct pollfd fds;
+struct sockaddr_storage server;
+
+uint8_t coap_send_buf[1024];
+uint8_t coap_recv_buf[1024];
+#define KEEP_ALIVE_INTERVAL K_SECONDS(10)
 
 /* Function for listen for responses thread */
 void listen_for_responses_thread(void *, void *, void *);
 K_THREAD_STACK_DEFINE(listen_for_responses_thread_stack_area, CONFIG_RESPONSE_THREAD_STACK_SIZE);
 struct k_thread listen_for_responses_thread_id;
 
+// static void keep_alive_timer_handler(struct k_timer *timer);
+// void keep_alive_work_handler(struct k_work *work);
+// static struct k_timer keep_alive_timer;
+// static struct k_work keep_alive_work;
+
+#define POLLING_INTERVAL K_SECONDS(300) // Polling interval
+static struct k_timer polling_state_timer;
+static struct k_work polling_work;
+void polling_timer_fn(struct k_timer *timer_id);
+void poll_requests(struct k_work *work);
+struct coap_client coap_client = {0};
+
 /* @brief Resolve the server's hostname
  * @return 0 on succes, <0 otherwise
  */
 static int server_resolve(void);
 
-int server_exchange_init()
+// forward declarations
+int send_observe_led();
+int send_observe_buz();
+int send_observe_gnssm();
+int send_secret_change();
+void start_polling();
+void stop_polling();
+
+int server_connect()
 {
     int err;
 
@@ -126,6 +155,7 @@ int server_exchange_init()
 
 #else
     sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    // sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sock < 0)
     {
         LOG_ERR("Failed to create socket: %d.\n", errno);
@@ -141,17 +171,53 @@ int server_exchange_init()
         return -errno;
     }
 
-    // init fds
-    fds.fd = sock;
-    fds.events = POLLIN;
+    return 0;
+}
 
-    // Start the listen for responses thread
-    k_tid_t my_tid = k_thread_create(&listen_for_responses_thread_id, listen_for_responses_thread_stack_area,
-                                     K_THREAD_STACK_SIZEOF(listen_for_responses_thread_stack_area),
-                                     listen_for_responses_thread,
-                                     NULL, NULL, NULL,
-                                     CONFIG_RESPONSE_THREAD_PRIORITY, 0, K_NO_WAIT);
+int server_exchange_init()
+{
+    int err;
 
+    err = server_connect();
+    if (err)
+    {
+        LOG_ERR("Failed to connect to server: %d\n", err);
+        return err;
+    }
+
+
+    // // init fds
+    // fds.fd = sock;
+    // fds.events = POLLIN;
+
+    // // Start the listen for responses thread
+    // k_tid_t my_tid = k_thread_create(&listen_for_responses_thread_id, listen_for_responses_thread_stack_area,
+    //                                  K_THREAD_STACK_SIZEOF(listen_for_responses_thread_stack_area),
+    //                                  listen_for_responses_thread,
+    //                                  NULL, NULL, NULL,
+    //                                  CONFIG_RESPONSE_THREAD_PRIORITY, 0, K_NO_WAIT);
+
+    // k_timer_init(&keep_alive_timer, keep_alive_timer_handler, NULL);
+    // k_timer_start(&keep_alive_timer, KEEP_ALIVE_INTERVAL, KEEP_ALIVE_INTERVAL);
+
+    // // Initialize work for keep-alive
+    // k_work_init(&keep_alive_work, keep_alive_work_handler);
+
+    err = coap_client_init(&coap_client, NULL);
+    if (err)
+    {
+        LOG_ERR("Failed to initialize CoAP client: %d", err);
+        return err;
+    }
+
+    isInitialized = true;
+
+    k_timer_init(&polling_state_timer, polling_timer_fn, NULL);
+    k_work_init(&polling_work, poll_requests);
+
+    start_polling();
+
+    // send_secret_change();
     return 0;
 }
 
@@ -278,8 +344,8 @@ static int client_handle_response(uint8_t *buf, int len)
     //     strcpy(temp_buf, "EMPTY");
     // }
 
-    // printk("CoAP response: code: 0x%x, token 0x%02x%02x, payload: %s\n",
-    //        coap_header_get_code(&response), token[1], token[0], temp_buf);
+    LOG_INF("CoAP response: code: 0x%x, token 0x%02x%02x, payload: %s\n",
+            coap_header_get_code(&response), res_token[1], res_token[0], temp_buf);
 
     return 0;
 }
@@ -291,6 +357,7 @@ void listen_for_responses_thread(void *, void *, void *)
 
     while (true)
     {
+
         // Wait for data in socket
         err = wait();
         if (err)
@@ -325,6 +392,10 @@ void listen_for_responses_thread(void *, void *, void *)
             LOG_DBG("Received an empty datagram");
             continue;
         }
+        else
+        {
+            LOG_INF("Received packet %d", bytes);
+        }
 
         err = client_handle_response(coap_recv_buf, bytes);
         if (err < 0)
@@ -337,40 +408,327 @@ void listen_for_responses_thread(void *, void *, void *)
 
 /* ---- Requests ---- */
 
+// void keep_alive_work_handler(struct k_work *work)
+// {
+
+//     LOG_INF("KEEP ALIVE");
+//     int err;
+
+//     struct coap_packet request;
+//     uint8_t coap_send_buf[1024];
+
+//     coap_packet_init(&request, coap_send_buf, sizeof(coap_send_buf), COAP_VERSION_1,
+//                      COAP_TYPE_CON, 0, NULL, COAP_METHOD_GET, coap_next_id());
+
+//     err = send(sock, request.data, request.offset, 0);
+//     if (err < 0) {
+//         LOG_ERR("Failed to send keep-alive ping: %d", errno);
+//     } else {
+//         LOG_INF("Keep-alive ping sent");
+//     }
+// }
+
+// static void keep_alive_timer_handler(struct k_timer *timer_id)
+// {
+//     k_work_submit(&keep_alive_work);
+// }
+
+void polling_timer_fn(struct k_timer *timer_id)
+{
+    k_work_submit(&polling_work);
+}
+
+void poll_requests(struct k_work *work)
+{
+    send_observe_gnssm();
+    send_observe_led();
+    send_observe_buz();
+}
+
+void start_polling()
+{
+    k_timer_start(&polling_state_timer, K_NO_WAIT, POLLING_INTERVAL);
+}
+void stop_polling()
+{
+    k_timer_stop(&polling_state_timer);
+}
+
+int decode_state(const uint8_t *payload, size_t len, bool *state)
+{
+    /* Create zcbor state variable for decoding. */
+    ZCBOR_STATE_D(decoding_state, 1, payload, len, 1, 0);
+
+    struct zcbor_string decoded_string;
+
+    bool success = zcbor_map_start_decode(decoding_state) &&
+                   zcbor_tstr_decode(decoding_state, &decoded_string) &&
+                   zcbor_bool_decode(decoding_state, state) &&
+                   zcbor_map_end_decode(decoding_state);
+    if (!success)
+    {
+        LOG_ERR("Decoding failed: %d\r\n", zcbor_peek_error(decoding_state));
+        return -1;
+    }
+
+    return 0;
+}
+
+bool led_state = false;
+static void led_response_cb(int16_t code, size_t offset, const uint8_t *payload,
+                            size_t len, bool last_block, void *user_data)
+{
+    if (code >= 0)
+    {
+        LOG_INF("CoAP response: code: 0x%x %d", code, len);
+
+        // Content
+        if (code == 0x45)
+        {
+            bool state;
+            if (decode_state(payload, len, &state))
+            {
+                return;
+            }
+
+            // sumbit when state on server changed
+            if (state != led_state)
+            {
+                // submit update event
+                struct led_state_event *led_event = new_led_state_event();
+                led_event->led_state = state;
+                APP_EVENT_SUBMIT(led_event);
+
+                led_state = state;
+            }
+        }
+    }
+    else
+    {
+        LOG_INF("Response received with error code for led polling: %d", code);
+    }
+}
+
 int send_observe_led()
 {
     int err;
 
-    struct coap_packet request;
-    uint8_t *token = coap_next_token();
+    struct coap_client_request req = {
+        .method = COAP_METHOD_GET,
+        .confirmable = true,
+        .fmt = COAP_CONTENT_FORMAT_TEXT_PLAIN,
+        .payload = NULL,
+        .cb = led_response_cb,
+        .len = 0,
+        .path = "devs/FF:EE:DD:CC:BB:AA/led",
+        .options = NULL,
+        .num_options = 0,
+        .user_data = NULL};
 
-    err = coap_packet_init(&request, coap_send_buf, sizeof(coap_send_buf),
-                           CONFIG_COAP_APP_VERSION, COAP_TYPE_NON_CON,
-                           COAP_TOKEN_MAX_LEN, token,
-                           COAP_METHOD_GET, coap_next_id());
-    if (err < 0)
+    /* Send request */
+    err = coap_client_req(&coap_client, sock, (struct sockaddr *)&server, &req, NULL);
+    if (err)
     {
-        printk("Failed to create CoAP request, %d\n", err);
+        LOG_ERR("Failed to send request: %d", err);
         return err;
     }
 
-    // err = coap_packet_append_option(&request, COAP_OPTION_URI_PATH,
-    // 					(uint8_t *)CONFIG_COAP_RESOURCE,
-    // 					strlen(CONFIG_COAP_RESOURCE));
-    if (err < 0)
+    LOG_INF("LED SEND");
+
+    return 0;
+}
+
+bool buzz_state = false;
+static void buzz_response_cb(int16_t code, size_t offset, const uint8_t *payload,
+                             size_t len, bool last_block, void *user_data)
+{
+    if (code >= 0)
     {
-        printk("Failed to encode CoAP option, %d\n", err);
+        LOG_INF("CoAP response: code: 0x%x %d", code, len);
+
+        // Content
+        if (code == 0x45)
+        {
+            bool state;
+            if (decode_state(payload, len, &state))
+            {
+                return;
+            }
+
+            // sumbit when state on server changed
+            if (state != buzz_state)
+            {
+                // submit update event
+                struct buzzer_state_event *buz_event = new_buzzer_state_event();
+                buz_event->buzzer_state = state;
+                APP_EVENT_SUBMIT(buz_event);
+
+                buzz_state = state;
+            }
+        }
+    }
+    else
+    {
+        LOG_INF("Response received with error code for buz polling: %x", code);
+    }
+}
+
+int send_observe_buz()
+{
+    int err;
+
+    struct coap_client_request req = {
+        .method = COAP_METHOD_GET,
+        .confirmable = true,
+        .fmt = COAP_CONTENT_FORMAT_TEXT_PLAIN,
+        .payload = NULL,
+        .cb = buzz_response_cb,
+        .len = 0,
+        .path = "devs/FF:EE:DD:CC:BB:AA/buz",
+        .options = NULL,
+        .num_options = 0,
+        .user_data = NULL};
+
+    /* Send request */
+    err = coap_client_req(&coap_client, sock, (struct sockaddr *)&server, &req, NULL);
+    if (err)
+    {
+        LOG_ERR("Failed to send request: %d", err);
         return err;
     }
 
-    // err = coap_packet_append_option(&request, COAP_OPTION_OBSERVE,
-    // 					(uint8_t *)CONFIG_COAP_RESOURCE,
-    // 					strlen(CONFIG_COAP_RESOURCE));
-    if (err < 0)
+    LOG_INF("BUZZ SEND");
+    return 0;
+}
+
+bool gnss_state = false;
+static void gnssm_response_cb(int16_t code, size_t offset, const uint8_t *payload,
+                              size_t len, bool last_block, void *user_data)
+{
+    if (code >= 0)
     {
-        printk("Failed to encode CoAP option, %d\n", err);
+        LOG_INF("CoAP response: code: 0x%x %d", code, len);
+
+        // Content
+        if (code == 0x45)
+        {
+            bool state;
+            if (decode_state(payload, len, &state))
+            {
+                return;
+            }
+
+            // sumbit when state on server changed
+            if (state != gnss_state)
+            {
+                // submit update event
+                struct gnns_mode_state_event *event = new_gnns_mode_state_event();
+                event->state = state;
+                APP_EVENT_SUBMIT(event);
+
+                gnss_state = state;
+            }
+        }
+    }
+    else
+    {
+        LOG_INF("Response received with error code for gnssm polling: %x", code);
+    }
+}
+
+int send_observe_gnssm()
+{
+    int err;
+
+    struct coap_client_request req = {
+        .method = COAP_METHOD_GET,
+        .confirmable = true,
+        .fmt = COAP_CONTENT_FORMAT_TEXT_PLAIN,
+        .payload = NULL,
+        .cb = gnssm_response_cb,
+        .len = 0,
+        .path = "devs/FF:EE:DD:CC:BB:AA/gnssm",
+        .options = NULL,
+        .num_options = 0,
+        .user_data = NULL};
+
+    /* Send request */
+    err = coap_client_req(&coap_client, sock, (struct sockaddr *)&server, &req, NULL);
+    if (err)
+    {
+        LOG_ERR("Failed to send request: %d", err);
         return err;
     }
 
+    LOG_INF("GNSSM SEND");
+    return 0;
+}
+
+static void secret_response_cb(int16_t code, size_t offset, const uint8_t *payload,
+                               size_t len, bool last_block, void *user_data)
+{
+    if (code >= 0)
+    {
+        LOG_INF("CoAP response: code: 0x%x %d", code, len);
+
+        // Changed
+        if (code == 0x44)
+        {
+            // send event
+        }
+    }
+    else
+    {
+        LOG_INF("Response received with error code for secret send: %x", code);
+    }
+}
+
+int send_secret_change()
+{
+    int err;
+
+    uint8_t payload[64] = {0};
+
+    char *secret = coap_next_token();
+    // LOG_INF("token 0x%04x", secret);
+    for (size_t i = 0; i < 8; i++)
+    {
+        LOG_INF("%02x", secret[i]);
+    }
+
+    ZCBOR_STATE_E(encoding_state, 0, payload, sizeof(payload), 0);
+    err = zcbor_map_start_encode(encoding_state, 0) &&
+          zcbor_tstr_put_lit(encoding_state, "sec") &&
+          zcbor_bstr_encode_ptr(encoding_state, secret, 8) &&
+          zcbor_map_end_encode(encoding_state, 0);
+    if (!err)
+    {
+        err = zcbor_peek_error(encoding_state);
+        LOG_ERR("Encoding failed: %d", err);
+        return -err;
+    }
+    int payload_len = encoding_state->payload - payload;
+
+    struct coap_client_request req = {
+        .method = COAP_METHOD_PUT,
+        .confirmable = true,
+        .fmt = COAP_CONTENT_FORMAT_TEXT_PLAIN,
+        .payload = payload,
+        .cb = secret_response_cb,
+        .len = payload_len,
+        .path = "devs/FF:EE:DD:CC:BB:AA",
+        .options = NULL,
+        .num_options = 0,
+        .user_data = NULL};
+
+    /* Send request */
+    err = coap_client_req(&coap_client, sock, (struct sockaddr *)&server, &req, NULL);
+    if (err)
+    {
+        LOG_ERR("Failed to send request: %d", err);
+        return err;
+    }
+
+    LOG_INF("SECRET SEND");
     return 0;
 }

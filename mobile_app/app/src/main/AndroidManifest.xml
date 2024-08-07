@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-<!-- Bluetooth Low Energy -->
+    <!-- Bluetooth Low Energy -->
     <uses-feature android:name="android.hardware.bluetooth_le" />
     <!-- For 30 sdk and below -->
     <uses-permission
@@ -15,16 +15,19 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
 
-<!-- Location -->
+    <!-- Location -->
     <uses-feature android:name="android.hardware.location" />
+
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-<!-- Internet -->
+    <!-- Internet -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-<!-- Storage -->
+    <!-- Storage -->
     <!-- For 32 sdk and below  -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
 
     <!-- For 33 sdk or higher -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
@@ -32,11 +35,12 @@
     <!-- To handle the reselection within the app on devices running Android 14 (API level 34) or higher.  -->
     <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
 
-<!-- Notifications -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Notifications -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-<!-- Services -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <!-- Services -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
 
     <application
         android:name=".NyanThingyApp"
@@ -45,6 +49,7 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.NyanthingyApp"
@@ -69,6 +74,11 @@
         <service
             android:name=".modules.ble.client.service.BleService"
             android:foregroundServiceType="connectedDevice" />
+
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            tools:node="remove" />
     </application>
 
 </manifest>

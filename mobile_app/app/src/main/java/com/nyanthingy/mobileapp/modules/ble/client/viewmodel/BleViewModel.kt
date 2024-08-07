@@ -38,21 +38,22 @@ class BleViewModel @Inject constructor(
 
     fun connectionState(macAddress: String) = bleServiceManager.connectionState(macAddress)
 
+    //Cashing the stateFlow
     private val signalStrengthCache = mutableMapOf<String, StateFlow<String>>()
-    fun signalStrength(macAddress: String): StateFlow<String> {
+    fun signalStrength(macAddress: String): StateFlow<String>? {
 
             return signalStrengthCache[macAddress] ?: bleServiceManager.rssiFlow(macAddress, 25)
-            .chunked(20)
+            ?.chunked(20)
             // Find the mode of each chunk
-            .map { chunk ->
+            ?.map { chunk ->
                 //Using the dictionary approach but functional
                 chunk.groupingBy { it }
                     .eachCount()
                     .maxBy { it.value }
                     .key
             }
-            .windowed(10)
-            .map { sampled ->
+            ?.windowed(10)
+            ?.map { sampled ->
                 //Computing the derivative with finite difference
                 val trend = sampled
                     .windowed(2)
@@ -67,29 +68,26 @@ class BleViewModel @Inject constructor(
                     trend > 0 -> "Increasing"
                     else -> "Stable"
                 }
-            }.stateIn(
+            }?.stateIn(
                 viewModelScope,
-                SharingStarted.Lazily,
+                SharingStarted.WhileSubscribed(),
                 ""
-            ).also {
+            )?.also {
                 signalStrengthCache[macAddress] = it
             }
     }
 
     /* Main functionalities */
-    fun getLedState() {
-
-    }
 
     fun setLedState(macAddress: String, state: Boolean) =
         bleServiceManager.setLedState(macAddress, state)
 
 
-    fun getBuzzerState() {
-
-    }
-
     fun setBuzzerState(macAddress: String, state: Boolean) =
         bleServiceManager.setBuzzerState(macAddress, state)
+
+    fun getBatteryState(macAddress: String) = bleServiceManager.getBatteryState(macAddress)
+
+    fun getActivity(macAddress: String)= bleServiceManager.getActivity(macAddress)
 
 }

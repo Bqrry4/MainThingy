@@ -6,7 +6,7 @@ config UART_BUFFER_SIZE
 
 config UART_RECEIVE_TIMEOUT
 	int "Inactivity period after receiving at least a byte which triggers #UART_RX_RDY event"
-	default 100
+	default -1
 	help
 	 In milisec
 
@@ -18,7 +18,7 @@ config UART_WAIT_FOR_BUFFER_DELAY
 
 config FIFO_TX_RETRANSMISSION_DELAY
 	int "The delay between the tries to send the tx buffer when there is already an ongoing transfer"
-	default 100
+	default 10
 	help
 	 In milisec
 
@@ -28,7 +28,7 @@ config UART_THREAD_STACK_SIZE
 
 config UART_THREAD_PRIORITY
 	int "Priority of the uart tx thread"
-	default 7
+	default 3
 
 
 endmenu

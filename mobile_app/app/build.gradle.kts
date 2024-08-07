@@ -6,7 +6,6 @@ plugins {
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     //kotlin("kapt")
     id("kotlin-parcelize")
-
 }
 
 android {
@@ -72,7 +71,9 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.hilt.work)
     ksp(libs.hilt.android.compiler)
+    ksp(libs.androidx.hilt.compiler)
 
     // Google maps
     implementation(libs.play.services.maps)
@@ -103,7 +104,7 @@ dependencies {
     implementation(libs.retrofit.converter.kotlinx.serialization)
     //add kotlinx-serialization
     implementation(libs.kotlinx.serialization.json)
-
+    implementation(libs.converter.gson)
     //Charts
 //    implementation(libs.ycharts)
 
@@ -111,7 +112,8 @@ dependencies {
     runtimeOnly("androidx.compose.animation:animation:1.6.7")
 
     // WorkManager
-    implementation("androidx.work:work-runtime-ktx:2.8.1")
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.work.runtime)
 
     //Tests
     testImplementation(libs.junit)

@@ -10,6 +10,7 @@ import org.eclipse.californium.core.CoapServer
 import org.eclipse.californium.core.config.CoapConfig
 import org.eclipse.californium.core.network.CoapEndpoint
 import org.eclipse.californium.elements.config.Configuration
+import org.eclipse.californium.elements.tcp.netty.TcpServerConnector
 import org.eclipse.californium.scandium.DTLSConnector
 import org.eclipse.californium.scandium.config.DtlsConfig
 import org.eclipse.californium.scandium.config.DtlsConnectorConfig
@@ -25,10 +26,11 @@ class NyanThingyCoapServer : CoapServer() {
 
         //private const val SERVER_HOSTNAME = "0.0.0.0"
         //hardcoded for the localtonet
-        private const val SERVER_HOSTNAME = "localhost"
+        private const val SERVER_HOSTNAME = "0.0.0.0"
 
         //reading values from californium3.properties
         private val SERVER_PORT = Configuration.getStandard().get(CoapConfig.COAP_PORT)
+        private val SERVER_PORT_TCP = 5685
         private val SERVER_SECURE_PORT: Int = Configuration.getStandard().get(CoapConfig.COAP_SECURE_PORT)
 
         //dtls related when x509 cert is used
@@ -94,14 +96,26 @@ class NyanThingyCoapServer : CoapServer() {
                 )
                 .build()
         )
+//
+//        //secure endpoint
+//        addEndpoint(
+//            CoapEndpoint.Builder()
+//                .setConfiguration(config)
+//                .setConnector(
+//                    DTLSConnector(dtlsConfig)
+//                )
+//                .build()
+//        )
 
-        //secure endpoint
+        val tcpConnector = TcpServerConnector(
+            InetSocketAddress(SERVER_HOSTNAME, SERVER_PORT_TCP), config
+        )
+
+        // tcp endpoint
         addEndpoint(
             CoapEndpoint.Builder()
                 .setConfiguration(config)
-                .setConnector(
-                    DTLSConnector(dtlsConfig)
-                )
+                .setConnector(tcpConnector)
                 .build()
         )
 

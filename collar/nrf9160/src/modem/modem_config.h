@@ -26,5 +26,5 @@ int deactivate_gnss();
 /// @param seconds Timeout in seconds
 /// @return lte connection status
 bool wait_for_lte_connection(uint16_t seconds);
-
+void wait_for_lte_connection_blocking();
 #endif

@@ -51,7 +51,25 @@
 			"buzzer_state_event.h": "c",
 			"buzzer.h": "c",
 			"hci.h": "c",
-			"imu_classifier.h": "c"
+			"imu_classifier.h": "c",
+			"ranges": "c",
+			"span": "c",
+			"vector": "c",
+			"xstring": "c",
+			"xutility": "c",
+			"xiosbase": "c",
+			"peripheral_conn_event.h": "c",
+			"zcbor_encode.h": "c",
+			"coap_client.h": "c",
+			"optional": "c",
+			"ratio": "c",
+			"system_error": "c",
+			"functional": "c",
+			"tuple": "c",
+			"type_traits": "c",
+			"gnns_mode_state_event.h": "c",
+			"state_flags.h": "c",
+			"uart_resolver.h": "c"
 		},
 		"nrf-connect.boardRoots": [
 			"${workspaceFolder:nrf52840}\\board\\"

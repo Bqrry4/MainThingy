@@ -24,7 +24,8 @@ fun ProfileEntry.toDomain() = ProfileModel(
     name = name,
     profileImageUri = profileImageUri,
     coverImageUri = coverImageUri,
-    macAddress = macAddress
+    macAddress = macAddress,
+    secret = secret
 )
 
 fun ProfileModel.fromDomain() = ProfileEntry(
@@ -32,5 +33,6 @@ fun ProfileModel.fromDomain() = ProfileEntry(
     name = name,
     profileImageUri = profileImageUri,
     coverImageUri = coverImageUri,
-    macAddress = macAddress
+    macAddress = macAddress,
+    secret = secret
 )

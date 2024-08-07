@@ -26,10 +26,10 @@ class LedResource : CoapResource("led") {
     private var state: Boolean? = null
 
     //Only one device could observe its own resource
-//    override fun addObserveRelation(relation: ObserveRelation) {
-////        this.clearObserveRelations()
-//        super.addObserveRelation(relation)
-//    }
+    override fun addObserveRelation(relation: ObserveRelation) {
+        this.clearObserveRelations()
+        super.addObserveRelation(relation)
+    }
 
     override fun handleGET(exchange: CoapExchange) {
         //for observe purpose
@@ -71,8 +71,8 @@ class LedResource : CoapResource("led") {
                 else -> exchange.respond(ResponseCode.INTERNAL_SERVER_ERROR)
             }
         }
-        println("ASSSSSSSSS")
         changed()
+        notifyObserverRelations(null)
         exchange.respond(ResponseCode.CHANGED)
     }
 

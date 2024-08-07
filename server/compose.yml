@@ -37,8 +37,8 @@ services:
       dockerfile: Dockerfile
     container_name: nyanCoap
     ports:
-      - "5683:5683"
-      - "5684:5684"
+      - "5683:5683/udp"
+      - "5684:5684/udp"
     expose:
       - "5683"
       - "5684"

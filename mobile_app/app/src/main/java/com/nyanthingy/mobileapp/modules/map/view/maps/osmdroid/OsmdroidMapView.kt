@@ -7,10 +7,8 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
-import android.util.Log
 import android.view.MotionEvent
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,7 +54,7 @@ fun OsmdroidMapView(
     focusCameraPosition: FocusCameraPosition,
     onCameraMoving: () -> Unit = {},
     animateTransition: Boolean = false,
-    overlays: List<@Composable ((MapsProjection) -> Unit)>? = null,
+    overlays: List<@Composable ((MapsProjection) -> Unit)>,
     onCameraChange: (FocusCameraPosition) -> Unit = {}
 ) {
 
@@ -114,7 +112,7 @@ fun OsmdroidMapView(
     })
 
     //Draw all overlays
-    overlays?.forEach { overlay ->
+    overlays.forEach { overlay ->
         overlay(OsmdroidProjection(projection))
     }
 
